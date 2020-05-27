@@ -96,6 +96,7 @@ class FrictionDetector(contactListener):
             obj.tiles.remove(tile)
 
 class CarRacing(gym.Env, EzPickle):
+    print ('CarRacing simulation in progress')
     metadata = {
         'render.modes': ['human', 'rgb_array', 'state_pixels'],
         'video.frames_per_second' : FPS
