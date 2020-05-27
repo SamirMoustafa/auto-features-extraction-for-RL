@@ -6,7 +6,7 @@ from gym.wrappers.monitor import Monitor
 import src.reinforcement_learning.env
 
 random.seed(0)  # make results reproducible
-advanced_mode = True
+advanced_mode = False
 record_video = False
 
 if advanced_mode:
@@ -17,7 +17,7 @@ if advanced_mode:
                    discretize_actions=None,
                    num_tracks=2,
                    num_lanes=2,
-                   num_lanes_changes=4,
+                   num_lanes_changes=6,
                    max_time_out=0,
                    frames_per_state=4,
                    num_obstacles=10)
@@ -69,7 +69,7 @@ if advanced_mode:
 
     env.render()
     if record_video:
-        env.monitor.start('/home/pavel/Skoltech/DL/final_project/auto-features-extraction-for-RL/src/reinforcement_learning/env/video-test', force=True)
+        env = Monitor(env, '/home/pavel/Skoltech/DL/final_project/auto-features-extraction-for-RL/src/reinforcement_learning/env/video-test', force=True)
     # env.key_press_fn = key_press
     # env.key_release_fn = key_release
 
@@ -121,7 +121,7 @@ else:
     env.viewer.window.on_key_press = key_press
     env.viewer.window.on_key_release = key_release
     if record_video:
-        env = Monitor(env, '/home/pavel/Skoltech/DL/final_project/auto-features-extraction-for-RL/src/reinforcement_learning/env/video-test', force=True)
+        env = Monitor(env, '/home/pavel/Skoltech/DL/final_project/auto-features-extraction-for-RL/src/reinforcement_learning/env/video-test-default', force=True)
     isopen = True
     while isopen:
         env.reset()

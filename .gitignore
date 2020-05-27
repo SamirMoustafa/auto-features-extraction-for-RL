@@ -129,3 +129,4 @@ dmypy.json
 .pyre/
 
 /src/reinforcement_learning/env/video-test/
+/src/reinforcement_learning/env/video-test-default/
