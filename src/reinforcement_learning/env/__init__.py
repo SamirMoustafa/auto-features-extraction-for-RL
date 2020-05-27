@@ -8,3 +8,10 @@ register(
     max_episode_steps=1000,
     reward_threshold=900,
 )
+
+register(
+    id='CarRacingCustomAdvanced-v0',
+    entry_point='src.reinforcement_learning.env.gym_core_environments.car_racing_advanced:CarRacing',
+    max_episode_steps=1000,
+    reward_threshold=900,
+)

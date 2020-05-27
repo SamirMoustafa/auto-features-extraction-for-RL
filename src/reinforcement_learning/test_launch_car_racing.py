@@ -7,7 +7,7 @@ import numpy as np
 
 random.seed(0)  # make results reproducible
 
-env = gym.make('CarRacingCustom-v0')
+env = gym.make('CarRacingCustomAdvanced-v0')
 observation = env.reset()
 
 N = 50
