@@ -2433,7 +2433,8 @@ if __name__=="__main__":
             num_lanes=2,
             num_lanes_changes=4,
             max_time_out=0,
-            frames_per_state=4)
+            frames_per_state=4,
+            num_obstacles=10)
 
     play(env)
 
