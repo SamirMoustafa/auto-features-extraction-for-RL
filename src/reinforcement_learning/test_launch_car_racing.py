@@ -1,30 +1,25 @@
 import gym
 import random
 import src.reinforcement_learning.env
+from scipy import misc
+from PIL import Image
+import numpy as np
 
 random.seed(0)  # make results reproducible
 
-num_episodes = 10
+env = gym.make('CarRacingCustom-v0')
+observation = env.reset()
 
+N = 50
+EPISODES = 1
+TIMESTAMP = 500
 
-def main():
-    env = gym.make('CarRacingCustom-v0')  # create the game
-    env.seed(0)  # make results reproducible
-    rewards = []
+for ep in range(EPISODES):
+    observation = env.reset()
+    reward = 0
+    sum_reward = 0
+    data_batch = {}
+    reset = True
+    for t in range(TIMESTAMP):
+        env.render()
 
-    for _ in range(num_episodes):
-        env.reset()
-        episode_reward = 0
-        while True:
-            action = env.action_space.sample()
-            _, reward, done, _ = env.step(action)  # random action
-            episode_reward += reward
-            if done:
-                print('Reward: %d' % episode_reward)
-                rewards.append(episode_reward)
-                break
-    print('Average reward: %.2f' % (sum(rewards) / len(rewards)))
-
-
-if __name__ == '__main__':
-    main()
