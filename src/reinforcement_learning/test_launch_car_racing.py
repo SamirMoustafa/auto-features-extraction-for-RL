@@ -2,6 +2,7 @@ import gym
 import random
 import numpy as np
 from pyglet.window import key
+from gym.wrappers.monitor import Monitor
 import src.reinforcement_learning.env
 
 random.seed(0)  # make results reproducible
@@ -67,11 +68,13 @@ if advanced_mode:
 
 
     env.render()
-    record_video = False
     if record_video:
-        env.monitor.start('/tmp/video-test', force=True)
-    env.key_press_fn = key_press
-    env.key_release_fn = key_release
+        env.monitor.start('/home/pavel/Skoltech/DL/final_project/auto-features-extraction-for-RL/src/reinforcement_learning/env/video-test', force=True)
+    # env.key_press_fn = key_press
+    # env.key_release_fn = key_release
+
+    env.viewer.window.on_key_press = key_press
+    env.viewer.window.on_key_release = key_release
     while True:
         env.reset()
         total_reward = 0.0
@@ -118,7 +121,6 @@ else:
     env.viewer.window.on_key_press = key_press
     env.viewer.window.on_key_release = key_release
     if record_video:
-        from gym.wrappers.monitor import Monitor
         env = Monitor(env, '/home/pavel/Skoltech/DL/final_project/auto-features-extraction-for-RL/src/reinforcement_learning/env/video-test', force=True)
     isopen = True
     while isopen:
