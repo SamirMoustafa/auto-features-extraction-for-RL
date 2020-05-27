@@ -3,10 +3,11 @@ import random
 import numpy as np
 from pyglet.window import key
 from gym.wrappers.monitor import Monitor
+import matplotlib.pyplot as plt
 import src.reinforcement_learning.env
 
 random.seed(0)  # make results reproducible
-advanced_mode = False
+advanced_mode = True
 record_video = False
 
 if advanced_mode:
@@ -66,7 +67,6 @@ if advanced_mode:
         if k == key.T:     env.screenshot('./')
         if k == key.Q:     sys.exit()
 
-
     env.render()
     if record_video:
         env = Monitor(env, '/home/pavel/Skoltech/DL/final_project/auto-features-extraction-for-RL/src/reinforcement_learning/env/video-test', force=True)
@@ -87,6 +87,9 @@ if advanced_mode:
             else:
                 a_tmp = a
             s, r, done, info = env.step(a_tmp)
+            print(s.shape)
+            plt.imshow(s.astype(np.uint8))
+            plt.show()
             total_reward += r
             if steps % 200 == 0 or done:
                 # print("\naction " + str(["{:+0.2f}".format(x) for x in a]))
