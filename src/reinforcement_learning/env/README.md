@@ -7,3 +7,5 @@
 
 ~/anaconda3/envs/gym_env/bin/pip install . (in submodule directories for installation of the third party environments)
 ```
+
+Also probably you will need to mark gym-duckietown as a source root
