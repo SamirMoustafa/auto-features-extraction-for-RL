@@ -133,3 +133,4 @@ dmypy.json
 /src/reinforcement_learning/env/third_party_environments/gym-donkeycar/apps/
 # /src/reinforcement_learning/env/third_party_environments/sdsandbox/
 /src/reinforcement_learning/data/
+/src/reinforcement_learning/client_secrets.json
