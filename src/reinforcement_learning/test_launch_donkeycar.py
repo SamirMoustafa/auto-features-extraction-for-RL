@@ -41,7 +41,8 @@ ENV_NAME = ['warehouse',
             'generated_track',
             'mountain_track',
             'avc_sparkfun',
-            'custom'
+            'custom',
+            'small_loop'
             ]
 
 
@@ -69,10 +70,10 @@ def simulate(env):
             print(wrapped_image.shape)
 
             if t % 25 == 0:
-                plt.imshow(observation)
-                plt.show()
+                # plt.imshow(observation)
+                # plt.show()
                 im = Image.fromarray(observation)
-                drive_file = drive.CreateFile({'title': ENV_NAME[0] + '_time_step_' + str(t) + '.jpeg',
+                drive_file = drive.CreateFile({'title': ENV_NAME[-1] + '_time_step_' + str(t) + '.jpeg',
                                                 'parents': [{'id': '1iBxcuGkYQlJmNTRbdBzPcUjjh2liy_Rt'}]})
                 file_name = 'data/' + ENV_NAME[0] + '_time_step_' + str(t) + '.jpeg'
                 im.save(file_name)
