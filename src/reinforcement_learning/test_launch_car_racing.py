@@ -88,8 +88,9 @@ if advanced_mode:
                 a_tmp = a
             s, r, done, info = env.step(a_tmp)
             print(s.shape)
-            plt.imshow(s.astype(np.uint8))
+            plt.imshow(s.astype(np.uint32))
             plt.show()
+            # print(s.astype(np.uint32))
             total_reward += r
             if steps % 200 == 0 or done:
                 # print("\naction " + str(["{:+0.2f}".format(x) for x in a]))
