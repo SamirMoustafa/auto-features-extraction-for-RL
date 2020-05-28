@@ -4,3 +4,6 @@
 [submodule "src/reinforcement_learning/env/third_party_environments/gym-donkeycar"]
 	path = src/reinforcement_learning/env/third_party_environments/gym-donkeycar
 	url = https://github.com/KopanevPavel/gym-donkeycar.git
+[submodule "src/reinforcement_learning/env/third_party_environments/sdsandbox"]
+	path = src/reinforcement_learning/env/third_party_environments/sdsandbox
+	url = https://github.com/KopanevPavel/sdsandbox.git

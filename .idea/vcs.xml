@@ -3,5 +3,8 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/src/reinforcement_learning/env/gym_core_environments/pybox2d" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/reinforcement_learning/env/third_party_environments/gym-donkeycar" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/reinforcement_learning/env/third_party_environments/gym-duckietown" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/src/reinforcement_learning/env/third_party_environments/sdsandbox" vcs="Git" />
   </component>
 </project>
