@@ -2,7 +2,7 @@
 This script allows you to manually control the simulator or Duckiebot
 using the keyboard arrows.
 """
-
+import matplotlib.pyplot as plt
 import sys
 import argparse
 import pyglet
@@ -106,6 +106,8 @@ def update(dt):
 
     obs, reward, done, info = env.step(action)
     print(obs.shape)
+    plt.imshow(obs)
+    plt.show()
     print('step_count = %s, reward=%.3f' % (env.unwrapped.step_count, reward))
 
     if key_handler[key.RETURN]:
