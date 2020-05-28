@@ -132,3 +132,4 @@ dmypy.json
 /src/reinforcement_learning/env/video-test-default/
 /src/reinforcement_learning/env/third_party_environments/gym-donkeycar/apps/
 # /src/reinforcement_learning/env/third_party_environments/sdsandbox/
+/src/reinforcement_learning/data/
