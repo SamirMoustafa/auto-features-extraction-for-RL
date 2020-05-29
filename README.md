@@ -10,15 +10,19 @@ Code tree:
 ├── run.py
 └── src
     ├── features_extraction
-    │   ├── autoencoders.py
     │   ├── base.py
+    │   ├── BetaVAE
+    │   │   ├── __init__.py
+    │   │   └── model.py
     │   ├── __init__.py
     │   └── networks.py
     ├── reinforcement_learning
     │   ├── agents.py
     │   ├── envs.py
     │   └── __init__.py
-    ├── args.py
     ├── __init__.py
+    ├── args.py
     └── utils.py
+
+
 ````
