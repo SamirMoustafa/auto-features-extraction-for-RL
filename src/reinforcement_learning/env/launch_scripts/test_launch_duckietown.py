@@ -9,6 +9,7 @@ import pyglet
 from pyglet.window import key
 import numpy as np
 import gym
+import os
 import gym_duckietown
 from gym_duckietown.envs import DuckietownEnv
 from gym_duckietown.wrappers import UndistortWrapper
@@ -107,14 +108,14 @@ def update(dt):
     obs, reward, done, info = env.step(action)
     print(obs.shape)
     plt.imshow(obs)
-    plt.show()
+    # plt.show()
     print('step_count = %s, reward=%.3f' % (env.unwrapped.step_count, reward))
 
     if key_handler[key.RETURN]:
         from PIL import Image
         im = Image.fromarray(obs)
-
-        im.save('screen.png')
+        PATH = os.path.abspath('env/') + '/data_samples/custom_environments/duckietown/'
+        im.save(PATH + 'screen.png')
 
     if done:
         print('done!')

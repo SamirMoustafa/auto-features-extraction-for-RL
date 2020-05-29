@@ -4,11 +4,12 @@ import numpy as np
 from pyglet.window import key
 from gym.wrappers.monitor import Monitor
 import matplotlib.pyplot as plt
+import os
 import src.reinforcement_learning.env
 
 random.seed(0)  # make results reproducible
 advanced_mode = True
-record_video = False
+record_video = True
 
 if advanced_mode:
     env = gym.make('CarRacingCustomAdvanced-v0',
@@ -69,7 +70,8 @@ if advanced_mode:
 
     env.render()
     if record_video:
-        env = Monitor(env, '/home/pavel/Skoltech/DL/final_project/auto-features-extraction-for-RL/src/reinforcement_learning/env/video-test', force=True)
+        PATH = os.path.abspath('env/') + '/data_samples/core_environments/'
+        env = Monitor(env, PATH + 'car_racing_advanced', force=True)
     # env.key_press_fn = key_press
     # env.key_release_fn = key_release
 
@@ -89,7 +91,7 @@ if advanced_mode:
             s, r, done, info = env.step(a_tmp)
             print(s.shape)
             plt.imshow(s.astype(np.uint32))
-            plt.show()
+            # plt.show()
             # print(s.astype(np.uint32))
             total_reward += r
             if steps % 200 == 0 or done:
@@ -125,7 +127,8 @@ else:
     env.viewer.window.on_key_press = key_press
     env.viewer.window.on_key_release = key_release
     if record_video:
-        env = Monitor(env, '/home/pavel/Skoltech/DL/final_project/auto-features-extraction-for-RL/src/reinforcement_learning/env/video-test-default', force=True)
+        PATH = os.path.abspath('env/') + '/data_samples/core_environments/'
+        env = Monitor(env, PATH + 'car_racing_default', force=True)
     isopen = True
     while isopen:
         env.reset()

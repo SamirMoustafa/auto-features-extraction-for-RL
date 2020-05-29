@@ -75,19 +75,20 @@ def simulate(env):
 
             if (t+1) % 400 == 0:
                 plt.plot(rewards)
-                plt.show()
+                # plt.show()
 
             # if t % 25 == 0:
                 # plt.imshow(observation)
                 # plt.show()
-            im = Image.fromarray(observation)
+            '''im = Image.fromarray(observation)
+            PATH = os.path.abspath('env/') + '/data_samples/custom_environments/donkeycar/'
             drive_file = drive.CreateFile({'title': ENV_NAME[0] + '_special_cases' + '_time_step_' + str(t) + '.jpg',
                                             'parents': [{'id': '1iBxcuGkYQlJmNTRbdBzPcUjjh2liy_Rt'}]})
-            file_name = 'data/' + ENV_NAME[0] + '_autopilot' + '_time_step_' + str(t) + '.jpg'
+            file_name = PATH + ENV_NAME[0] + '_autopilot' + '_time_step_' + str(t) + '.jpg'
             im.save(file_name)
             drive_file.SetContentFile(file_name)
             drive_file.Upload()
-            os.remove(file_name)
+            os.remove(file_name)'''
 
             '''
             if done:
@@ -96,7 +97,7 @@ def simulate(env):
 
 
 # SET UP ENVIRONMENT
-# exe_path = f"env/third_party_environments/gym-donkeycar/apps/donkey_sim.x86_64"
+# exe_path = os.path.abspath('env/') + "/third_party_environments/gym-donkeycar/apps/donkey_sim.x86_64"
 exe_path = ""
 port = 9090
 
