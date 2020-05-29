@@ -8,7 +8,7 @@ args = {
 
     # Arguments for the auto-encoders
     "BetaVAE": {
-        "Z_dim": 10,
+        "Z_dim": 64,
         "C_max": 25,
         "C_stop_iter": 1e5,
         "lr": 1e-4,
