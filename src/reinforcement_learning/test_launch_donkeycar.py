@@ -33,6 +33,8 @@ print(ListFolder('root'))
 
 action = np.array([0.0, 0.0])
 
+rewards = []
+
 NUM_EPISODES = 3
 MAX_TIME_STEPS = 1000000
 
@@ -62,24 +64,30 @@ def simulate(env):
             # action = np.array([0.0, 0.0])
 
             # execute the action
-            observation, reward, done, info = env.step(action)
-            # observation, reward, done, info = env.viewer.observe()
+            # observation, reward, done, info = env.step(action)
+            observation, reward, done, info = env.viewer.observe()
 
             wrapped_image = observation.transpose(2, 0, 1)
-            print(type(wrapped_image))
-            print(wrapped_image.shape)
+            # print(type(wrapped_image))
+            # print(wrapped_image.shape)
+            print(reward)
+            rewards.append(reward)
 
-            if t % 25 == 0:
+            if (t+1) % 400 == 0:
+                plt.plot(rewards)
+                plt.show()
+
+            # if t % 25 == 0:
                 # plt.imshow(observation)
                 # plt.show()
-                im = Image.fromarray(observation)
-                drive_file = drive.CreateFile({'title': ENV_NAME[-1] + '_time_step_' + str(t) + '.jpeg',
-                                                'parents': [{'id': '1iBxcuGkYQlJmNTRbdBzPcUjjh2liy_Rt'}]})
-                file_name = 'data/' + ENV_NAME[0] + '_time_step_' + str(t) + '.jpeg'
-                im.save(file_name)
-                drive_file.SetContentFile(file_name)
-                drive_file.Upload()
-                os.remove(file_name)
+            im = Image.fromarray(observation)
+            drive_file = drive.CreateFile({'title': ENV_NAME[0] + '_special_cases' + '_time_step_' + str(t) + '.jpg',
+                                            'parents': [{'id': '1iBxcuGkYQlJmNTRbdBzPcUjjh2liy_Rt'}]})
+            file_name = 'data/' + ENV_NAME[0] + '_autopilot' + '_time_step_' + str(t) + '.jpg'
+            im.save(file_name)
+            drive_file.SetContentFile(file_name)
+            drive_file.Upload()
+            os.remove(file_name)
 
             '''
             if done:
