@@ -9,97 +9,96 @@ import torch.nn.functional as F
 from src.features_extraction.base import Encoder, Decoder, Bottleneck, View, LossFunction
 
 
+# Source: https://github.com/AntixK/PyTorch-VAE/blob/master/models/vanilla_vae.py
 class ModifiedVAEEncoder(Encoder, nn.Module):
-    def __init__(self, z_dim=10, nc=1):
+    def __init__(self, latent_dim=10, in_channels=1):
         super(ModifiedVAEEncoder, self).__init__()
-        self.nc = nc
-        self.z_dim = z_dim
+        self.latent_dim = latent_dim
+        self.in_channels = in_channels
 
-        self.lin1 = nn.Linear(self.nc, 256)
-        self.bn1 = nn.BatchNorm1d(256)
-        self.rl1 = nn.ReLU(True)
-        self.lin2 = nn.Linear(256, self.z_dim)
-        self.lin3 = nn.Linear(256, self.z_dim)
+        self.encoder = nn.Sequential(
+            nn.Conv2d(self.in_channels, out_channels=32, kernel_size=3, stride=2, padding=1),
+            nn.BatchNorm2d(32),
+            nn.LeakyReLU(),
+            nn.Conv2d(32, out_channels=64, kernel_size=3, stride=2, padding=1),
+            nn.BatchNorm2d(64),
+            nn.LeakyReLU(),
+            nn.Conv2d(64, out_channels=128, kernel_size=3, stride=2, padding=1),
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(),
+            nn.Conv2d(128, out_channels=256, kernel_size=3, stride=2, padding=1),
+            nn.BatchNorm2d(256),
+            nn.LeakyReLU(),
+            nn.Conv2d(256, out_channels=512, kernel_size=3, stride=2, padding=1),
+            nn.BatchNorm2d(512),
+            nn.LeakyReLU(),
+            View((-1, 512)),
+            nn.Linear(512, self.latent_dim)
+        )
 
     def forward(self, x):
-        x = self.lin1(x)
-        x = self.bn1(x)
-        out = self.rl1(x)
-        return self.lin2(out), self.lin3(out)
+        return self.encoder(x), nn.Linear(2048, self.latent_dim), nn.Linear(2048, self.latent_dim)
 
 
 class ModifiedVAEDecoder(Decoder, nn.Module):
-    def __init__(self, z_dim=10, nc=1, target_size=(64, 64)):
+    def __init__(self, latent_dim=10, in_channels=1):
         super(ModifiedVAEDecoder, self).__init__()
-        self.nc = nc
-        self.z_dim = z_dim
-        self.target_size = target_size
+        self.latent_dim = latent_dim
+        self.in_channels = in_channels
 
-        self.lin4 = nn.Linear(self.z_dim, 256)
-        self.lin5 = nn.Linear(256, self.nc)
-        self.lin6 = nn.Linear(256, self.nc)
-        self.rl2 = nn.ReLU(True)
-        self.bn2 = nn.BatchNorm1d(256)
+        self.decoder = nn.Sequential(
+            nn.Linear(self.latent_dim, 512),
+            View((-1, 512, 1, 1)),
+            nn.ConvTranspose2d(512, 256, kernel_size=3, stride=2, padding=1, output_padding=1),
+            nn.BatchNorm2d(256),
+            nn.LeakyReLU(),
+            nn.ConvTranspose2d(256, 128, kernel_size=3, stride=2, padding=1, output_padding=1),
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(),
+            nn.ConvTranspose2d(128, 64, kernel_size=3, stride=2, padding=1, output_padding=1),
+            nn.BatchNorm2d(64),
+            nn.LeakyReLU(),
+            nn.ConvTranspose2d(64, 32, kernel_size=3, stride=2, padding=1, output_padding=1),
+            nn.BatchNorm2d(32),
+            nn.LeakyReLU(),
+            nn.ConvTranspose2d(32, 32, kernel_size=3, stride=2, padding=1, output_padding=1),
+            nn.BatchNorm2d(32),
+            nn.LeakyReLU(),
+            nn.Conv2d(32, out_channels=self.in_channels, kernel_size=3, padding=1),
+            nn.Tanh()
+        )
 
     def forward(self, x):
-        x = self.lin4(x)
-        x = self.bn2(x)
-        out = self.rl2(x)
-        return self.lin5(out), self.lin6(out)
+        return self.decoder(x)
 
 
 class ModifiedVAELossFunction(LossFunction):
-    def __call__(self, x, x_recon, distribution):
-        batch_size = x.size(0)
-        assert batch_size != 0
-
-        if distribution == 'bernoulli':
-            recon_loss = F.binary_cross_entropy_with_logits(x_recon, x, reduction='sum').div(batch_size)
-        elif distribution == 'gaussian':
-            recon_loss = F.mse_loss(x_recon, x, reduction='sum').div(batch_size)
-        else:
-            recon_loss = None
-
-        return recon_loss
-
-
-def gaussian_sampler(mu, logsigma):
-    std = logsigma.exp()
-    eps = std.data.new(std.size()).normal_()
-    return eps.mul(std).add(mu)
-
-
-def KL_divergence(mu, logsigma):
-    return -(0.5 + logsigma - 0.5 * mu**2 - 0.5 * torch.exp(2 * logsigma)).sum(dim=1).mean()
-
-
-def log_likelihood(x, mu, logsigma):
-    return (-logsigma - 0.5 * np.log(2 * np.pi) - 0.5 * (mu - x)**2 / torch.exp(2 * logsigma)).sum(dim=1).mean()
-
-
-def loss_vae(x, mu_gen, logsigma_gen, mu_z, logsigma_z):
-    return KL_divergence(mu_z, logsigma_z) - log_likelihood(x, mu_gen, logsigma_gen)
+    def __call__(self, x, x_recon, batch_size=100):
+        return F.mse_loss(x_recon, x, reduction='sum').div(batch_size)
 
 
 if __name__ == '__main__':
 
     batch_size = args['input']['batch_size']
     num_of_channels = args['input']['num_channels']
-    z_dim = args['ModifiedVAE']['Z_dim']
+    latent_dim = args['ModifiedVAE']['Z_dim']
     input_size = (batch_size, num_of_channels) + args['input']['input_size']
 
     x_input = torch.rand(input_size)
 
-    encoder = ModifiedVAEEncoder(z_dim=z_dim, nc=num_of_channels)
-    decoder = ModifiedVAEDecoder(z_dim=z_dim, nc=num_of_channels, target_size=input_size)
+    encoder, fc_mu, fc_var = ModifiedVAEEncoder(latent_dim=latent_dim, in_channels=num_of_channels)
+
+    result = torch.flatten(encoder, start_dim=1)
+    mu = fc_mu(result)
+    log_var = fc_var(result)
+
+    decoder = ModifiedVAEDecoder(latent_dim=latent_dim, in_channels=num_of_channels)
     loss_function = ModifiedVAELossFunction()
 
-    latent_mu, latent_logsigma = encoder(x_input)
-
-    reconstruction_mu, reconstruction_logsigma = decoder(gaussian_sampler(latent_mu, latent_logsigma))
-
-    reconstruction_mu, reconstruction_logsigma = decoder(x)
+    std = torch.exp(0.5 * log_var)
+    eps = torch.randn_like(std)
+    x = decoder(eps * std + mu)
 
     print('input_shape:', x_input.shape)
     print('output_shape:', x.shape)
-    print('loss function value:', loss_function(x_input, x, distribution='gaussian'))
+    print('loss function value:', loss_function(x_input, x))
