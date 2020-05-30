@@ -9,6 +9,9 @@ import torch
 # GPUs id to use them
 from fastprogress import master_bar, progress_bar
 from torch.utils.tensorboard import SummaryWriter
+from torchvision import transforms, datasets
+
+from src.args import args
 
 GPU_ids = [0]
 GPU_ids_str = ','.join([str(i) for i in GPU_ids])
@@ -55,6 +58,28 @@ def write_results_csv(file_name, headers_name, row_data, operation='a'):
 
 
 torch2numpy = lambda x: x.cpu().detach().numpy()
+
+
+def mnist_NxN_loader(root=args['hyper_parameters']['dataset'],
+                     batch_size=args['hyper_parameters']['batch_size'],
+                     NxN=args['hyper_parameters']['input_size']):
+
+    transform_list = [transforms.RandomRotation(15),
+                      transforms.Resize(NxN),
+                      transforms.ToTensor(), ]
+
+    transform = transforms.Compose(transform_list)
+
+    mnist_train = datasets.MNIST(root, train=True, transform=transform, target_transform=None,
+                                 download=True)
+    mnist_test = datasets.MNIST(root, train=False, transform=transform, target_transform=None,
+                                download=True)
+
+    # Set Data Loader(input pipeline)
+    train_loader = torch.utils.data.DataLoader(dataset=mnist_train, batch_size=batch_size, shuffle=True)
+    test_loader = torch.utils.data.DataLoader(dataset=mnist_test, batch_size=batch_size, shuffle=False)
+
+    return train_loader, test_loader
 
 
 def get_device():
@@ -126,7 +151,7 @@ def train_ae(n_epochs, model, train_iterator, val_iterator, optimizer, device, c
 
             # start plotting for notebook
             mb.main_bar.comment = f'EPOCHS, best_loss:{best_val_loss}'
-            mb.child.comment = f"train_loss:{round(train_loss,3)}, val_loss:{round(val_loss,3)}"
+            mb.child.comment = f"train_loss:{round(train_loss, 3)}, val_loss:{round(val_loss, 3)}"
             plot_loss_update(epoch, n_epochs, mb, train_losses, val_losses)
 
     return best_model_path
@@ -173,3 +198,7 @@ def run_epoch(model, iterator, optimizer, criterion, phase='train', epoch=0, wri
             writer.add_scalar(f"loss_epoch/{phase}", epoch_loss / len(iterator), epoch)
 
         return epoch_loss / len(iterator)
+
+
+if __name__ == '__main__':
+    pass
