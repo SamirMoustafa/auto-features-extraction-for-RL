@@ -26,6 +26,12 @@ args = {
         "reg_weight": 100,
         "lr": 1e-4,
     },
+    "ModifiedVAE": {
+        "Z_dim": 10,
+        "C_max": 25,
+        "C_stop_iter": 1e5,
+        "lr": 1e-4,
+    },
 
 
 
