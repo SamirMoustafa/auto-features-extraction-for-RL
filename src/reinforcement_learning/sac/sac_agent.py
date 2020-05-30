@@ -5,7 +5,7 @@ import torch.distributions as dist
 import numpy as np
 
 from reinforcement_learning.base.rl_agent import RLAgent
-from reinforcement_learning.sac.nn_models import SoftQNetwork2D, GaussianPolicyNetwork2D
+from reinforcement_learning.sac.sac_nn_models import SoftQNetwork2D, GaussianPolicyNetwork2D
 from reinforcement_learning.utils.nn_utils import copy_params
 from reinforcement_learning.utils.replay_buffer import ReplayBuffer
 

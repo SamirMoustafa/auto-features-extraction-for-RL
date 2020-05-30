@@ -5,6 +5,9 @@ class RLAgent(ABC):
     def get_action(self, state):
         pass
 
+    def train_step(self, batch_size):
+        pass
+
     def set_eval_mode(self, mode):
         pass
 

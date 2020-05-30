@@ -1,1 +1,1 @@
-from .nn_models import SoftQNetwork2D
+from .sac_nn_models import SoftQNetwork2D
