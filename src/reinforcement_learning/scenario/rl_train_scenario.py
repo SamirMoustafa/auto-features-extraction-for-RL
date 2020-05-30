@@ -9,6 +9,7 @@ class RLTrainScenario:
 
     def run(self):
         episode_rewards = []
+        total_steps = 0
 
         for episode in range(self.n_episodes_):
             state = self.env_.reset()
@@ -19,8 +20,9 @@ class RLTrainScenario:
                 next_state, reward, done = self.env_.step(action)
                 self.agent_.replay_buffer_.push(state, action, reward, next_state, done)
                 episode_reward += reward
+                total_steps += 1
 
-                if len(self.agent_.replay_buffer_) > self.batch_size_:
+                if len(self.agent_.replay_buffer_) > self.batch_size_ and total_steps > 300:
                     self.agent_.train_step(self.batch_size_)
 
                 if done or step == self.max_steps_ - 1:

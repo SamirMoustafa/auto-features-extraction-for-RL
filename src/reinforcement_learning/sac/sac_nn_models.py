@@ -22,7 +22,7 @@ class SoftQNetwork2D(nn.Module):
             nn.BatchNorm2d(8),
             nn.ReLU()
         )
-        self.linear1_ = nn.Linear(6440 + action_dim, hidden_dim)
+        self.linear1_ = nn.Linear(288 + action_dim, hidden_dim)
         self.linear2_ = nn.Linear(hidden_dim, 1)
 
     def forward(self, state, action):
@@ -56,7 +56,7 @@ class GaussianPolicyNetwork2D(nn.Module):
             nn.ReLU()
         )
         self.linear_common_ = nn.Sequential(
-            nn.Linear(6440, hidden_dim),
+            nn.Linear(288, hidden_dim),
             nn.ReLU(),
             nn.Linear(hidden_dim, hidden_dim),
             nn.ReLU()
