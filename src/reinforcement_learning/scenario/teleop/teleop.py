@@ -11,6 +11,7 @@ class Teleoperator:
         self.shared_dict_ = shared_dict
         self.action_queue_ = action_queue
         self.process_ = None
+        self.clock = pygame.time.Clock()
 
         self.x_ = 0.0
         self.theta_ = 0.0
@@ -22,32 +23,39 @@ class Teleoperator:
         pygame.display.set_mode((200, 200))
 
         while True:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                if event.type == pygame.KEYDOWN:
-                    self.process_key(event.key)
-            pygame.time.Clock().tick(60.0)
+            end = False
+            self.theta_, self.x_ = 0, 0
+            while not end:
+                pygame_key = pygame.key.get_pressed()
+                for event in pygame.event.get():
+                    if event.type == pygame.QUIT:
+                        end = True
+                        pygame.quit()
+                    if event.type == pygame.KEYDOWN:
+                        end = True
+                        if event.key == pygame.K_m:
+                            self.shared_dict_["manual_mode"] = not self.shared_dict_["manual_mode"]
+                self.process_key(pygame_key)
+
+                pygame.time.Clock().tick(60.0)
 
     def process_key(self, pygame_key):
-        if pygame_key == pygame.K_m:
-            self.shared_dict_["manual_mode"] = not self.shared_dict_["manual_mode"]
-            return
+
         if self.shared_dict_["manual_mode"] is False:
             return
 
         control_key = False
-        if pygame_key == pygame.K_UP:
-            self.x_ += 1.0
+        if pygame_key[pygame.K_UP]:
+            self.x_ += 0.02
             control_key = True
-        elif pygame_key == pygame.K_DOWN:
-            self.x_ -= 1.0
+        if pygame_key[pygame.K_DOWN]:
+            self.x_ -= 0.02
             control_key = True
-        elif pygame_key == pygame.K_LEFT:
-            self.theta_ += 1.0
+        if pygame_key[pygame.K_LEFT]:
+            self.theta_ -= 0.02
             control_key = True
-        elif pygame_key == pygame.K_RIGHT:
-            self.theta_ -= 1.0
+        if pygame_key[pygame.K_RIGHT]:
+            self.theta_ += 0.02
             control_key = True
         if control_key:
             # self.control_throttle_, self.control_steering_ = self.control(self.x_, self.theta_,

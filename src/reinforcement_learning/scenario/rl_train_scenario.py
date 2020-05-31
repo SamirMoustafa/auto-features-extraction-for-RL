@@ -31,12 +31,14 @@ class RLTrainScenario:
             for step in range(self.max_steps_):
                 action = None
                 if not shared_dict["manual_mode"]:
+                    # print('NN MODE')
                     if exploration_mode:
                         action = self.env_.env_.action_space.sample()
                     else:
                         action = self.agent_.get_action(state)
                 else:
-                    state, _, _ = self.env_.step([0.0, 0.0])
+                    # print('MANUAL MODE')
+                    # state, _, _ = self.env_.step([0.0, 0.0])
                     # print("Wait")
                     # action = self.action_queue_.get(block=True)
                     action = shared_dict["action"]

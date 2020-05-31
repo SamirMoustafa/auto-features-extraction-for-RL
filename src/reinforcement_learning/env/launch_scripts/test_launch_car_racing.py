@@ -9,7 +9,7 @@ import src.reinforcement_learning.env
 
 random.seed(0)  # make results reproducible
 advanced_mode = True
-record_video = True
+record_video = False
 
 if advanced_mode:
     env = gym.make('CarRacingCustomAdvanced-v0',
