@@ -134,3 +134,31 @@ dmypy.json
 # /src/reinforcement_learning/env/third_party_environments/sdsandbox/
 /src/reinforcement_learning/data/
 # /src/reinforcement_learning/client_secrets.json
+
+# JetBrains
+
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/usage.statistics.xml
+.idea/**/dictionaries
+.idea/**/shelf
+
+.idea/**/contentModel.xml
+
+.idea/**/dataSources/
+.idea/**/dataSources.ids
+.idea/**/dataSources.local.xml
+.idea/**/sqlDataSources.xml
+.idea/**/dynamic.xml
+.idea/**/uiDesigner.xml
+.idea/**/dbnavigator.xml
+
+/**/.idea/**
+/**/cmake-build-debug/**
+/**/cmake-build-debug-remote/**
+
+/**/.idea/
+/**/cmake-build-debug/
+
+# Visual Studio Code
+/.vscode
