@@ -35,7 +35,7 @@ action = np.array([0.0, 0.0])
 
 rewards = []
 
-NUM_EPISODES = 3
+NUM_EPISODES = 15
 MAX_TIME_STEPS = 1000000
 
 ENV_NAME = ['warehouse',
@@ -75,9 +75,9 @@ def simulate(env):
 
             if t % 100 == 0:
                 plt.plot(rewards)
-                plt.show()
+                # plt.show()
                 plt.imshow(observation)
-                plt.show()
+                # plt.show()
 
             '''
             if t % 25 == 0:
@@ -93,9 +93,9 @@ def simulate(env):
                 drive_file.Upload()
                 os.remove(file_name)'''
 
-            '''
+
             if done:
-                break'''
+                break
 
 
 # SET UP ENVIRONMENT

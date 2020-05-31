@@ -3,6 +3,8 @@
     <CLASSES>
       <root url="file:///opt/ros/kinetic/share" />
     </CLASSES>
-    <SOURCES />
+    <SOURCES>
+      <root url="file://$USER_HOME$" />
+    </SOURCES>
   </library>
 </component>
