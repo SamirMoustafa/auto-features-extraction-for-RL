@@ -82,6 +82,36 @@ def mnist_NxN_loader(root=args['hyper_parameters']['dataset'],
     return train_loader, test_loader
 
 
+class FeatureVecExtractor():
+  '''
+  make sure that drop_last = False for dataloaders; probably u'll have to create a separate dataloader for that.
+  args:
+  model - initialized model used for training
+  data_iterators = list of iterators (train, test)
+  returns: feature vector of shape [N, latent_dim]
+  '''
+  def __init__(self, model, device, data_iterators, checkpoint_path):
+    self.model = load_model(model, checkpoint_path)
+    self.device = device
+    self.data_loaders = data_iterators
+
+  def infer(self, loader):
+    feature_vec = []
+    self.model.eval()
+    for x_batch, y_batch in loader:
+      x_batch = x_batch.to(self.device)
+      features = self.model(x_batch)  # make sure the model returns only feature vector. e.g. SimCLR returns head projections also
+      feature_vec.extend(features.cpu().detach().numpy())
+    feature_vector = np.array(feature_vec)
+    return feature_vector
+
+  def get_features(self):
+    train_loader, test_loader = self.data_loaders
+    X_train_feature_vec = self.infer(train_loader)
+    X_test_feature_vec = self.infer(test_loader)
+    return np.vstack((X_train_feature_vec, X_test_feature_vec))
+
+
 def get_device():
     device = torch.device('cpu')
     if torch.cuda.is_available():
