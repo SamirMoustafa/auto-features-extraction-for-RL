@@ -35,6 +35,10 @@ class SACAgent(RLAgent):
         self.q_net_2_ = SoftQNetwork2D(action_dim).to(self.device_)
         self.target_q_net_1_ = SoftQNetwork2D(action_dim).to(self.device_)
         self.target_q_net_2_ = SoftQNetwork2D(action_dim).to(self.device_)
+        for target_param, param in zip(self.target_q_net_1_.parameters(), self.q_net_1_.parameters()):
+            target_param.data.copy_(param)
+        for target_param, param in zip(self.target_q_net_2_.parameters(), self.q_net_2_.parameters()):
+            target_param.data.copy_(param)
         copy_params(self.q_net_1_, self.target_q_net_1_)
         copy_params(self.q_net_2_, self.target_q_net_2_)
         self.q_1_optimizer_ = optim.Adam(self.q_net_1_.parameters(), lr=critic_lr)

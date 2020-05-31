@@ -9,7 +9,7 @@ from reinforcement_learning.scenario.progress.console_progress_reporter import C
 
 
 def main():
-    env = DonkeyCarEnvironment(os.path.abspath("./env/third_party_environments/"))
+    env = DonkeyCarEnvironment(os.path.abspath("./reinforcement_learning/env/third_party_environments/"))
 
     # agent = DDPGAgent((128, 128),
     #                   env.get_action_space().shape[0],
@@ -34,7 +34,7 @@ def main():
                      force_cpu=True)
 
     scenario = RLTrainScenario(env, agent,
-                               progress_reporter=ConsoleProgressReporter(),
+                               progress_reporter=NeptuneProgressReporter("timeescaper/rl-full-image", "eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vdWkubmVwdHVuZS5haSIsImFwaV91cmwiOiJodHRwczovL3VpLm5lcHR1bmUuYWkiLCJhcGlfa2V5IjoiMmE1NDY1MjQtOTJhZS00NjJmLTlkMmYtNTIyOWJlNjEyMWJhIn0="),
                                n_episodes=10000,
                                max_steps=5000,
                                batch_size=64)
