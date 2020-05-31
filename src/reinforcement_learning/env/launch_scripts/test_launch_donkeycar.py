@@ -64,8 +64,8 @@ def simulate(env):
             # action = np.array([0.0, 0.0])
 
             # execute the action
-            observation, reward, done, info = env.step(action)
-            # observation, reward, done, info = env.viewer.observe()
+            # observation, reward, done, info = env.step(action)
+            observation, reward, done, info = env.viewer.observe()
 
             wrapped_image = observation.transpose(2, 0, 1)
             # print(type(wrapped_image))
@@ -100,8 +100,8 @@ def simulate(env):
 
 # SET UP ENVIRONMENT
 exe_path = os.path.abspath('env/') + "/third_party_environments/gym-donkeycar/apps/donkey_sim_custom_build.x86_64"
-# exe_path = ""  # If you have running game in Unity
-port = 9090
+exe_path = ""  # If you have running game in Unity
+port = 9091
 
 env_list = [
     "donkey-warehouse-v0",

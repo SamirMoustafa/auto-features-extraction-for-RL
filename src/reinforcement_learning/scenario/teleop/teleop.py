@@ -48,14 +48,20 @@ class Teleoperator:
         if pygame_key[pygame.K_UP]:
             self.x_ += 0.02
             control_key = True
-        if pygame_key[pygame.K_DOWN]:
+        elif pygame_key[pygame.K_DOWN]:
             self.x_ -= 0.02
+            control_key = True
+        else:
+            self.x_ = 0
             control_key = True
         if pygame_key[pygame.K_LEFT]:
             self.theta_ -= 0.02
             control_key = True
-        if pygame_key[pygame.K_RIGHT]:
+        elif pygame_key[pygame.K_RIGHT]:
             self.theta_ += 0.02
+            control_key = True
+        else:
+            self.theta_ = 0
             control_key = True
         if control_key:
             # self.control_throttle_, self.control_steering_ = self.control(self.x_, self.theta_,
