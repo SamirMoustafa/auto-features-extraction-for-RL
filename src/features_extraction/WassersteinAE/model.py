@@ -3,56 +3,36 @@
 
 
 import torch
-import torchvision
 from torch import nn
 import torch.nn.functional as F
 import torch.utils.data
-from torchvision import transforms
 
-from src.features_extraction.base import Encoder, Decoder, Bottleneck, View, LossFunction
-
-# work with MNIST Dataset
-transform = transforms.Compose([transforms.Pad(2, fill=0, padding_mode='constant'), transforms.ToTensor()])
-train_dataset = torchvision.datasets.MNIST(
-    root="~/torch_datasets", train=True, transform=transform, download=True)
-
-test_dataset = torchvision.datasets.MNIST(
-    root="~/torch_datasets", train=False, transform=transform, download=True)
-
-train_loader = torch.utils.data.DataLoader(
-    train_dataset, batch_size=128, shuffle=True, num_workers=4, pin_memory=True)
-
-test_loader = torch.utils.data.DataLoader(
-    test_dataset, batch_size=32, shuffle=False, num_workers=4)
-
-print('num_batches_train:', len(train_loader))
-print('num_batches_test:', len(test_loader))
-print('x_batch_shape:', next(iter(train_loader))[0].shape)
-print('y_batch_shape:', next(iter(train_loader))[1].shape)
+from src.args import args
+from src.features_extraction.base import Encoder, Decoder, View, LossFunction
+from src.utils import mnist_NxN_loader
 
 
 class WassersteinAEncoder(Encoder, nn.Module):
-    def __init__(self, latent_dim, in_channels):
+    def __init__(self, z_dim, nc):
         super(WassersteinAEncoder, self).__init__()
-        self.latent_dim = latent_dim
-        self.in_channels = in_channels
-        self.encoder = nn.Sequential(nn.Conv2d(self.in_channels, 32, 3, 2, 1),
-                                     nn.BatchNorm2d(32),
-                                     nn.LeakyReLU(),
-                                     nn.Conv2d(32, 64, 3, 2, 1),
-                                     nn.BatchNorm2d(64),
-                                     nn.LeakyReLU(),
-                                     nn.Conv2d(64, 128, 3, 2, 1),
-                                     nn.BatchNorm2d(128),
-                                     nn.LeakyReLU(),
-                                     nn.Conv2d(128, 256, 3, 2, 1),
-                                     nn.BatchNorm2d(256),
-                                     nn.LeakyReLU(),
-                                     nn.Conv2d(256, 512, 3, 2, 1),
-                                     nn.BatchNorm2d(512),
-                                     nn.LeakyReLU(),
-                                     View((-1, 512)),
-                                     nn.Linear(512, self.latent_dim))
+        self.z_dim = z_dim
+        self.nc = nc
+        self.encoder = nn.Sequential(
+            nn.Conv2d(nc, 32, 4, 2, 1),         # B,  32, 32, 32
+            nn.ReLU(True),
+            nn.Conv2d(32, 32, 4, 2, 1),         # B,  32, 16, 16
+            nn.ReLU(True),
+            nn.Conv2d(32, 32, 4, 2, 1),         # B,  32,  8,  8
+            nn.ReLU(True),
+            nn.Conv2d(32, 32, 4, 2, 1),         # B,  32,  4,  4
+            nn.ReLU(True),
+            View((-1, 32 * 4 * 4)),             # B, 512
+            nn.Linear(32 * 4 * 4, 256),         # B, 256
+            nn.ReLU(True),
+            nn.Linear(256, 256),                # B, 256
+            nn.ReLU(True),
+            nn.Linear(256, z_dim * 2),          # B, z_dim*2
+        )
 
     def forward(self, x):
         x = self.encoder(x)
@@ -60,47 +40,46 @@ class WassersteinAEncoder(Encoder, nn.Module):
 
 
 class WassersteinADecoder(Decoder, nn.Module):
-    def __init__(self, latent_dim, in_channels):
+    def __init__(self, z_dim, nc, target_size):
         super(WassersteinADecoder, self).__init__()
-        self.latent_dim = latent_dim
-        self.in_channels = in_channels
-        self.decoder = nn.Sequential(nn.Linear(self.latent_dim, 512),
-                                     View((-1, 512, 1, 1)),
-                                     nn.ConvTranspose2d(512, 256, 3, 2, 1, 1),
-                                     nn.BatchNorm2d(256),
-                                     nn.LeakyReLU(),
-                                     nn.ConvTranspose2d(256, 128, 3, 2, 1, 1),
-                                     nn.BatchNorm2d(128),
-                                     nn.LeakyReLU(),
-                                     nn.ConvTranspose2d(128, 64, 3, 2, 1, 1),
-                                     nn.BatchNorm2d(64),
-                                     nn.LeakyReLU(),
-                                     nn.ConvTranspose2d(64, 32, 3, 2, 1, 1),
-                                     nn.BatchNorm2d(32),
-                                     nn.LeakyReLU(),
-                                     nn.ConvTranspose2d(32, 32, 3, 2, 1, 1),
-                                     nn.BatchNorm2d(32),
-                                     nn.LeakyReLU(),
-                                     nn.Conv2d(32, self.in_channels, 3, padding=1),
-                                     nn.Tanh())
+        self.z_dim = z_dim
+        self.nc = nc
+        self.target_size = target_size
+
+        self.decoder = nn.Sequential(
+            nn.Linear(2 * z_dim, 256),              # B, 256
+            nn.ReLU(True),
+            nn.Linear(256, 256),                    # B, 256
+            nn.ReLU(True),
+            nn.Linear(256, 32 * 4 * 4),             # B, 512
+            nn.ReLU(True),
+            View((-1, 32, 4, 4)),                   # B,  32,  4,  4
+            nn.ConvTranspose2d(32, 32, 4, 2, 1),    # B,  32,  8,  8
+            nn.ReLU(True),
+            nn.ConvTranspose2d(32, 32, 4, 2, 1),    # B,  32, 16, 16
+            nn.ReLU(True),
+            nn.ConvTranspose2d(32, 32, 4, 2, 1),    # B,  32, 32, 32
+            nn.ReLU(True),
+            nn.ConvTranspose2d(32, nc, 4, 2, 1),    # B,  nc, 64, 64
+            nn.Tanh(),
+            View(self.target_size),
+        )
 
     def forward(self, x):
         x = self.decoder(x)
         return x
 
 
-# In[133]:
-
-
 class WassersteinAE(nn.Module):
-    def __init__(self):
+    def __init__(self, z_dim, nc, target_size):
         super(WassersteinAE, self).__init__()
-        self.encoder = WassersteinAEncoder(12, 1)
-        self.decoder = WassersteinADecoder(12, 1)
+        self.encoder = WassersteinAEncoder(z_dim, nc)
+        self.decoder = WassersteinADecoder(z_dim, nc, target_size)
 
     def forward(self, x):
         z = self.encoder(x)
-        return [self.decoder(z), x, z]
+        x = self.decoder(z)
+        return x, z
 
 
 # loss aux functions
@@ -126,9 +105,6 @@ def calc_mmd(z, reg_weight):
     return mmd
 
 
-# In[135]:
-
-
 class WassersteinLossFunction(LossFunction):
     def __call__(self, x, x_recon, z, reg_weight):
         batch_size = x.size(0)
@@ -144,7 +120,25 @@ class WassersteinLossFunction(LossFunction):
 
 
 if __name__ == '__main__':
-    model = WassersteinAE()
-    x_recon, x, z = model(next(iter(train_loader))[0])
+    # work with MNIST Dataset
+    train_loader, test_loader = mnist_NxN_loader()
+
+    print('num_batches_train:', len(train_loader))
+    print('num_batches_test:', len(test_loader))
+    print('x_batch_shape:', next(iter(train_loader))[0].shape)
+    print('y_batch_shape:', next(iter(train_loader))[1].shape)
+
+    batch_size = args['hyper_parameters']['batch_size']
+    num_of_channels = args['hyper_parameters']['num_channels']
+    input_size = (batch_size, num_of_channels) + args['hyper_parameters']['input_size']
+    z_dim = args['hyper_parameters']['z_dim']
+    reg_weight = args['WassersteinAE']['reg_weight']
+
+    # input
+    x = next(iter(train_loader))[0]
+
+    # test model
+    model = WassersteinAE(z_dim, num_of_channels, input_size)
+    x_recon, z = model(x)
     loss = WassersteinLossFunction()
-    loss(x, x_recon, z, 100)
+    loss(x, x_recon, z, reg_weight)
