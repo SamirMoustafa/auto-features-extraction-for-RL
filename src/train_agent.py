@@ -21,9 +21,9 @@ def main():
     #                   critic_lr=1e-4,
     #                   actor_lr=1e-4,
     #                   force_cpu=True)
-    agent = SACAgent(env.env_.observation_space.shape[0],
-                     env.get_action_space().shape[0],
-                     [env.get_action_space().low, env.get_action_space().high],
+    agent = SACAgent(env.env_.observation_space.shape,
+                     env.action_space.shape[0],
+                     [env.action_space.low, env.action_space.high],
                      gamma=0.99,
                      tau=0.01,
                      alpha=0.2,

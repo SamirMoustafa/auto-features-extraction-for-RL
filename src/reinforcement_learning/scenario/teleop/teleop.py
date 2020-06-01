@@ -6,7 +6,7 @@ import numpy as np
 class Teleoperator:
     def __init__(self, env, shared_dict, action_queue):
         self.env_ = env
-        self.action_space_ = self.env_.get_action_space()
+        self.action_space_ = self.env_.action_space
         self.shared_dict_ = shared_dict
         self.action_queue_ = action_queue
         self.process_ = None
