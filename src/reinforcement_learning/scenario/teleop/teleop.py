@@ -4,9 +4,8 @@ import numpy as np
 
 
 class Teleoperator:
-    def __init__(self, env, replay_buffer, shared_dict, action_queue):
+    def __init__(self, env, shared_dict, action_queue):
         self.env_ = env
-        self.replay_buffer_ = replay_buffer
         self.action_space_ = self.env_.get_action_space()
         self.shared_dict_ = shared_dict
         self.action_queue_ = action_queue
@@ -35,9 +34,13 @@ class Teleoperator:
                         end = True
                         if event.key == pygame.K_m:
                             self.shared_dict_["manual_mode"] = not self.shared_dict_["manual_mode"]
+                            print("Manual mode:" + str(self.shared_dict_["manual_mode"]))
+                        elif event.key == pygame.K_e:
+                            self.shared_dict_["exploration_mode"] = False
+
                 self.process_key(pygame_key)
 
-                pygame.time.Clock().tick(60.0)
+                #pygame.time.Clock().tick(60.0)
 
     def process_key(self, pygame_key):
 

@@ -9,6 +9,7 @@ from reinforcement_learning.sac.sac_nn_models import SoftQNetwork2D, GaussianPol
 from reinforcement_learning.utils.nn_utils import copy_params
 from reinforcement_learning.utils.replay_buffer import ReplayBuffer
 
+import matplotlib.pyplot as plt
 
 class SACAgent(RLAgent):
     def __init__(self, state_dim, action_dim, action_range, gamma, tau, alpha, buffer_size,
@@ -94,6 +95,7 @@ class SACAgent(RLAgent):
         self.set_eval_mode(False)
 
         states, actions, rewards, next_states, dones = self.replay_buffer_.sample_random_batch(batch_size)
+        plt.imshow(states[0])
         states = torch.FloatTensor(states).to(self.device_)
         actions = torch.FloatTensor(actions).to(self.device_)
         rewards = torch.FloatTensor(rewards).to(self.device_)

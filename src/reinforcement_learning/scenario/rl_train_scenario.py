@@ -13,47 +13,51 @@ class RLTrainScenario:
         self.action_queue_ = Queue()
 
     def run(self):
-        shared_dict ={"action": [0, 0], "manual_mode": False}
+        shared_dict ={"action": [0, 0], "manual_mode": False, "exploration_mode": True}
 
-        teleop = Teleoperator(self.env_, self.agent_.replay_buffer_, shared_dict, self.action_queue_)
+        teleop = Teleoperator(self.env_, shared_dict, self.action_queue_)
         teleop.start()
 
         episode_rewards = []
         total_steps = 0
 
         exploration_mode = True
+        state = self.env_.reset()
 
+        # Stage 1: Exploration
+        while shared_dict["exploration_mode"]:
+            if not shared_dict["manual_mode"]:
+                action = self.env_.env_.action_space.sample()
+            else:
+                action = shared_dict["action"]
+            next_state, reward, done = self.env_.step(action)
+            self.agent_.replay_buffer_.push(state, action, reward, next_state, done)
+            state = next_state
+            if done:
+                state = self.env_.reset()
+
+        print("Exploration finished, start training")
+        state = self.env_.reset()
         for episode in range(self.n_episodes_):
             state = self.env_.reset()
             episode_reward = 0
-            shared_dict["action"] = [0.0, 0.0]
 
             for step in range(self.max_steps_):
-                action = None
                 if not shared_dict["manual_mode"]:
-                    # print('NN MODE')
-                    if exploration_mode:
-                        action = self.env_.env_.action_space.sample()
-                    else:
-                        action = self.agent_.get_action(state)
+                    #print("Actioning")
+                    action = self.agent_.get_action(state)
                 else:
-                    # print('MANUAL MODE')
-                    # state, _, _ = self.env_.step([0.0, 0.0])
-                    # print("Wait")
-                    # action = self.action_queue_.get(block=True)
                     action = shared_dict["action"]
-                    print(action)
 
                 next_state, reward, done = self.env_.step(action)
                 self.agent_.replay_buffer_.push(state, action, reward, next_state, done)
                 episode_reward += reward
                 total_steps += 1
 
-                if len(self.agent_.replay_buffer_) > self.batch_size_ and total_steps > 300:
-                    print("Train step")
-                    self.agent_.train_step(self.batch_size_)
-
                 if done or step == self.max_steps_ - 1:
+                    if len(self.agent_.replay_buffer_) > self.batch_size_ and not shared_dict["manual_mode"]:
+                        print("Train, steps: " + str(step))
+                        self.agent_.train_step(self.batch_size_)
                     episode_rewards.append(episode_reward)
                     self.reporter_.report_episode_reward(episode, episode_reward)
                     break
