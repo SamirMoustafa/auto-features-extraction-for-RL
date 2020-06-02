@@ -8,8 +8,11 @@ import torch.nn.functional as F
 import torch.utils.data
 
 from src.args import args
+from src.test_modules import TestModelMethods
+from src.utils import get_fixed_hyper_param, reconstruction_loss
 from src.features_extraction.base import Encoder, Decoder, View, LossFunction
-from src.utils import mnist_NxN_loader
+
+test = TestModelMethods()
 
 
 class WassersteinAEncoder(Encoder, nn.Module):
@@ -100,19 +103,23 @@ def calc_mmd(z, reg_weight):
     prior_z = torch.rand_like(z)
     prior_z_kernel = calc_kernel(prior_z, prior_z)
     z_kernel = calc_kernel(z, z)
-    priorz_z_kernel = calc_kernel(prior_z, z)
-    mmd = reg_weight * prior_z_kernel.mean() + reg_weight * z_kernel.mean() - 2 * reg_weight * priorz_z_kernel.mean()
+    prior_z_kernel = calc_kernel(prior_z, z)
+    mmd = reg_weight * prior_z_kernel.mean() + reg_weight * z_kernel.mean() - 2 * reg_weight * prior_z_kernel.mean()
     return mmd
 
 
-class WassersteinLossFunction(LossFunction):
-    def __call__(self, x, x_recon, z, reg_weight):
-        batch_size = x.size(0)
-        bias_corr = batch_size * (batch_size - 1)
-        reg_weight /= bias_corr
+class WassersteinAELossFunction(LossFunction):
+    def __init__(self, reg_weight):
+        super().__init__()
+        self.reg_weight = reg_weight
 
-        recon_loss = F.mse_loss(x_recon, x)
-        mmd_loss = calc_mmd(z, reg_weight)
+    def __call__(self, x, x_recon, z):
+        batch_size = x.shape[0]
+        bias_corr = batch_size * (batch_size - 1)
+        self.reg_weight /= bias_corr
+
+        recon_loss = reconstruction_loss(x_recon, x)
+        mmd_loss = calc_mmd(z, self.reg_weight)
 
         loss = recon_loss + mmd_loss
 
@@ -120,25 +127,11 @@ class WassersteinLossFunction(LossFunction):
 
 
 if __name__ == '__main__':
-    # work with MNIST Dataset
-    train_loader, test_loader = mnist_NxN_loader()
 
-    print('num_batches_train:', len(train_loader))
-    print('num_batches_test:', len(test_loader))
-    print('x_batch_shape:', next(iter(train_loader))[0].shape)
-    print('y_batch_shape:', next(iter(train_loader))[1].shape)
-
-    batch_size = args['hyper_parameters']['batch_size']
-    num_of_channels = args['hyper_parameters']['num_channels']
-    input_size = (batch_size, num_of_channels) + args['hyper_parameters']['input_size']
-    z_dim = args['hyper_parameters']['z_dim']
-    reg_weight = args['WassersteinAE']['reg_weight']
-
-    # input
-    x = next(iter(train_loader))[0]
+    batch_size, num_of_channels, input_size, z_dim = get_fixed_hyper_param(args['hyper_parameters'])
+    reg_weight = args['wasserstein_ae']['reg_weight']
 
     # test model
     model = WassersteinAE(z_dim, num_of_channels, input_size)
-    x_recon, z = model(x)
-    loss = WassersteinLossFunction()
-    loss(x, x_recon, z, reg_weight)
+    loss = WassersteinAELossFunction(reg_weight)
+    test.test_model(model, loss)

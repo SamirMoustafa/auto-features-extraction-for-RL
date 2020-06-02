@@ -1,12 +1,16 @@
-from src.args import args
+#!/usr/bin/env python
+# coding: utf-8
 
 import torch
 from torch import nn
-from torch.autograd import Variable
-import torch.nn.functional as F
+import torch.utils.data
 
-from src.features_extraction.base import Encoder, Decoder, Bottleneck, View, LossFunction
-from src.utils import mnist_NxN_loader
+from src.args import args
+from src.test_modules import TestModelMethods
+from src.features_extraction.base import Encoder, Decoder, View, LossFunction, Bottleneck
+from src.utils import reparameterize, reconstruction_loss, kl_divergence, get_fixed_hyper_param, get_device
+
+test = TestModelMethods()
 
 
 class BetaVAEEncoder(Encoder, nn.Module):
@@ -81,13 +85,8 @@ class BetaVAEBottleneck(Bottleneck, nn.Module):
     def forward(self, encoded):
         mu = encoded[:, :self.z_dim]
         log_var = encoded[:, self.z_dim:]
-        z = self.re_parametrize(mu, log_var)
+        z = reparameterize(mu, log_var)
         return z, mu, log_var
-
-    def re_parametrize(self, mu, log_var):
-        std = log_var.div(2).exp()
-        eps = Variable(std.data.new(std.size()).normal_())
-        return mu + std * eps
 
 
 class BetaVAE(nn.Module):
@@ -102,78 +101,34 @@ class BetaVAE(nn.Module):
         x = self.encoder(x)
         z, mu, log_var = self.bottleneck(x)
         x = self.decoder(z)
-        return x, z, mu, log_var
-
-
-def kl_divergence(mu, log_var):
-    batch_size = mu.size(0)
-    assert batch_size != 0
-    if mu.data.ndimension() == 4:
-        mu = mu.view(mu.size(0), mu.size(1))
-    if log_var.data.ndimension() == 4:
-        log_var = log_var.view(log_var.size(0), log_var.size(1))
-
-    klds = -0.5 * (1 + log_var - mu.pow(2) - log_var.exp())
-    total_kld = klds.sum(1).mean(0, True)
-    dimension_wise_kld = klds.mean(0)
-    mean_kld = klds.mean(1).mean(0, True)
-
-    return total_kld, dimension_wise_kld, mean_kld
-
-
-def reconstruction_loss(x, x_recon, distribution):
-    batch_size = x.size(0)
-    assert batch_size != 0
-
-    if distribution == 'bernoulli':
-        recon_loss = F.binary_cross_entropy_with_logits(x_recon, x, reduction='sum').div(batch_size)
-    elif distribution == 'gaussian':
-        recon_loss = F.mse_loss(x_recon, x, reduction='sum').div(batch_size)
-    else:
-        recon_loss = None
-
-    return recon_loss
+        return x, mu, log_var
 
 
 class BetaVAELossFunction(LossFunction):
     def __init__(self):
         super(BetaVAELossFunction, self).__init__()
-        self.C_max = args['BetaVAE']['C_max']
-        self.GAMMA = args['BetaVAE']['Gamma']
-        self.C_stop_iter = args['BetaVAE']['C_stop_iter']
-        self.ITERATIONS = args['BetaVAE']['num_epochs']
+        self.C_max = args['beta_vae']['C_max']
+        self.GAMMA = args['beta_vae']['Gamma']
+        self.C_stop_iter = args['beta_vae']['C_stop_iter']
+        self.ITERATIONS = args['beta_vae']['num_epochs']
         self.C_max = torch.FloatTensor([self.C_max])
 
     def __call__(self, x, x_recon, mu, log_var, distribution='gaussian'):
         C = torch.clamp(self.C_max / self.C_stop_iter * self.ITERATIONS, 0, self.C_max.data[0])
+        C = C.to(get_device())
 
         recon_loss = reconstruction_loss(x, x_recon, distribution)
         total_kld, dim_wise_kld, mean_kld = kl_divergence(mu, log_var)
-
         loss = recon_loss + self.GAMMA * (total_kld - C).abs()
 
         return loss
 
 
 if __name__ == '__main__':
-    # work with MNIST Dataset
-    train_loader, test_loader = mnist_NxN_loader()
 
-    print('num_batches_train:', len(train_loader))
-    print('num_batches_test:', len(test_loader))
-    print('x_batch_shape:', next(iter(train_loader))[0].shape)
-    print('y_batch_shape:', next(iter(train_loader))[1].shape)
-
-    batch_size = args['hyper_parameters']['batch_size']
-    num_of_channels = args['hyper_parameters']['num_channels']
-    input_size = (batch_size, num_of_channels) + args['hyper_parameters']['input_size']
-    z_dim = args['hyper_parameters']['z_dim']
-
-    # input
-    x = next(iter(train_loader))[0]
+    batch_size, num_of_channels, input_size, z_dim = get_fixed_hyper_param(args['hyper_parameters'])
 
     # test model
     model = BetaVAE(z_dim, num_of_channels, input_size)
-    x_recon, z, mu, log_var = model(x)
     loss = BetaVAELossFunction()
-    loss(x, x_recon, mu, log_var)
+    test.test_model(model, loss)
