@@ -175,13 +175,28 @@ def get_device():
     return device
 
 
-def load_model(model, path):
+def load_model(model, path=None):
+    if not path:
+        path = f"{model.__class__.__name__}.best.pth"
     model.load_state_dict(torch.load(MODELS_PATH + path, map_location='cuda:' + GPU_ids_str))
     return model
 
 
 def save_model(model, path):
     torch.save(model.state_dict(), MODELS_PATH + path)
+
+
+def extract_features(model, batch, device):
+    model.eval()
+    if hasattr(model, 'bottleneck'):
+        output = model.bottleneck(model.encoder(batch.to(device)))
+    else:
+        output = model.encoder(batch.to(device))
+
+    if isinstance(output, tuple):
+        return output[0]
+    else:
+        return output
 
 
 def get_fixed_hyper_param(args):
