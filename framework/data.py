@@ -16,29 +16,27 @@ random.seed(seed)
 np.random.seed(seed)
 torch.manual_seed(seed)
 
-class FeatureVecExtractor():
-  def __init__(self, model, device, data_iterators, checkpoint_path):
-    self.model = model
-    self.device = device
-    self.data_loaders = data_iterators
-    self.checkpoint_path = checkpoint_path
+class FeatureExtractor():
+    def __init__(self, model, device, data_iterator, checkpoint_path):
+        self.model = model
+        self.device = device
+        self.data_loader = data_iterator
+        self.checkpoint_path = checkpoint_path
 
-  def infer(self, loader):
-    feature_vec = []
-    self.model.load_state_dict(torch.load(self.checkpoint_path)['state_dict'])
-    self.model.eval()
-    for x_batch, y_batch in loader:
-      x_batch = x_batch.to(self.device)
-      features, _ = self.model(x_batch)
-      feature_vec.extend(features.cpu().detach().numpy())
-    feature_vector = np.array(feature_vec)
-    return feature_vector
+    def infer(self, loader):
+        feature_vec = []
+        self.model.load_state_dict(torch.load(self.checkpoint_path)['state_dict'])
+        self.model.eval()
+        for x_batch in loader:
+            x_batch = x_batch.to(self.device)
+            features, _ = self.model(x_batch)
+            feature_vec.extend(features.cpu().detach().numpy())
+        feature_vector = np.array(feature_vec)
+        return feature_vector
 
-  def get_features(self):
-    train_loader, test_loader = self.data_loaders
-    X_train_feature = self.infer(train_loader)
-    X_test_feature = self.infer(test_loader)
-    return np.vstack((X_train_feature, X_test_feature))
+    def get_features(self):
+        X_features = self.infer(self.data_loader)
+        return X_features
 
 class ImageTransformation():
   def __init__(self, transform):
