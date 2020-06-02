@@ -4,10 +4,14 @@ from torch.utils.tensorboard import SummaryWriter
 import torchvision
 from torchvision import transforms
 import torch.nn.functional as F
+from IPython import display
+from tqdm import trange
+import matplotlib.pyplot as plt
 import numpy as np
+from aux import *
 
 
-def train(model, device, export_name, lr, weight_decay, gamma, step_size, n_epochs, cloud):
+def train(model, device, export_name, lr, weight_decay, gamma, step_size, n_epochs, cloud, train_iterator, val_iterator, criterion):
 
     if not cloud:
         writer = SummaryWriter(f'log/{export_name}')
