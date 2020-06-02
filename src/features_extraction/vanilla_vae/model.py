@@ -16,20 +16,20 @@ class VanillaVAEEncoder(Encoder, nn.Module):
         super(VanillaVAEEncoder, self).__init__()
 
         self.encoder = nn.Sequential(
-            nn.Conv2d(nc, 32, 4, 2, 1),  # B,  32, 32, 32
+            nn.Conv2d(nc, 32, 4, 2, 1),         # B,  32, 32, 32
             nn.ReLU(True),
-            nn.Conv2d(32, 32, 4, 2, 1),  # B,  32, 16, 16
+            nn.Conv2d(32, 32, 4, 2, 1),         # B,  32, 16, 16
             nn.ReLU(True),
-            nn.Conv2d(32, 32, 4, 2, 1),  # B,  32,  8,  8
+            nn.Conv2d(32, 32, 4, 2, 1),         # B,  32,  8,  8
             nn.ReLU(True),
-            nn.Conv2d(32, 32, 4, 2, 1),  # B,  32,  4,  4
+            nn.Conv2d(32, 32, 4, 2, 1),         # B,  32,  8,  8
             nn.ReLU(True),
-            View((-1, 32 * 4 * 4)),  # B, 512
-            nn.Linear(32 * 4 * 4, 256),  # B, 256
+            View((-1, 32 * 8 * 8)),             # B, 2048
+            nn.Linear(32 * 8 * 8, 512),         # B, 512
             nn.ReLU(True),
-            nn.Linear(256, 256),  # B, 256
+            nn.Linear(512, 256),                # B, 256
             nn.ReLU(True),
-            nn.Linear(256, z_dim * 2),  # B, z_dim*2
+            nn.Linear(256, z_dim),          # B, z_dim*2
         )
 
     def forward(self, x):
@@ -39,24 +39,25 @@ class VanillaVAEEncoder(Encoder, nn.Module):
 class VanillaVAEDecoder(Decoder, nn.Module):
     def __init__(self, z_dim=10, nc=1, target_size=(128, 128)):
         super(VanillaVAEDecoder, self).__init__()
+        self.target_size = target_size
 
         self.decoder = nn.Sequential(
-            nn.Linear(z_dim, 256),  # B, 256
+            nn.Linear(z_dim, 256),              # B, 256
             nn.ReLU(True),
-            nn.Linear(256, 256),  # B, 256
+            nn.Linear(256, 256),                    # B, 256
             nn.ReLU(True),
-            nn.Linear(256, 32 * 4 * 4),  # B, 512
+            nn.Linear(256, 32 * 8 * 8),             # B, 2048
             nn.ReLU(True),
-            View((-1, 32, 4, 4)),  # B,  32,  4,  4
-            nn.ConvTranspose2d(32, 32, 4, 2, 1),  # B,  32,  8,  8
+            View((-1, 32, 8, 8)),                   # B,  32,  8,  8
+            nn.ConvTranspose2d(32, 32, 4, 2, 1),    # B,  32,  8,  8
             nn.ReLU(True),
-            nn.ConvTranspose2d(32, 32, 4, 2, 1),  # B,  32, 16, 16
+            nn.ConvTranspose2d(32, 32, 4, 2, 1),    # B,  32, 16, 16
             nn.ReLU(True),
-            nn.ConvTranspose2d(32, 32, 4, 2, 1),  # B,  32, 32, 32
+            nn.ConvTranspose2d(32, 32, 4, 2, 1),    # B,  32, 32, 32
             nn.ReLU(True),
-            nn.ConvTranspose2d(32, nc, 4, 2, 1),  # B,  nc, 64, 64
+            nn.ConvTranspose2d(32, nc, 4, 2, 1),    # B,  nc, 64, 64
             nn.Tanh(),
-            View(target_size),
+            View(self.target_size),
         )
 
     def forward(self, x):
@@ -66,8 +67,8 @@ class VanillaVAEDecoder(Decoder, nn.Module):
 class VanillaVAEBottleneck(Bottleneck, nn.Module):
     def __init__(self, latent_dim):
         super(VanillaVAEBottleneck, self).__init__()
-        self.mu = nn.Linear(2 * latent_dim, latent_dim)
-        self.var = nn.Linear(2 * latent_dim, latent_dim)
+        self.mu = nn.Linear(latent_dim, latent_dim)
+        self.var = nn.Linear(latent_dim, latent_dim)
 
     def forward(self, x):
         x = torch.flatten(x, start_dim=1)
