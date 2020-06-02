@@ -76,7 +76,8 @@ def train(model, device, export_name, lr, weight_decay, gamma, step_size, n_epoc
         display.clear_output(wait = True) 
         
         if cloud:
-            fig, (ax1, ax2) = plt.subplots(nrows = 1, ncols = 2)
+            
+            fig, (ax1, ax2) = plt.subplots(nrows = 1, ncols = 2, figsize = (10, 5))
             ax1.plot(train_loss_history)
             ax2.plot(val_loss_history)
             plt.show()
