@@ -7,13 +7,11 @@ from pathlib import Path
 from time import sleep
 
 import numpy as np
-
 import torch
-from PIL import Image
-from torch import Tensor
 import torch.nn.functional as F
-
+from PIL import Image
 from fastprogress import master_bar, progress_bar
+from torch import Tensor
 from torch.utils.data import Dataset
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import transforms, datasets
@@ -21,7 +19,7 @@ from torchvision import transforms, datasets
 from src.args import args
 
 # GPUs id to use them
-GPU_ids = [0]
+GPU_ids = [1]
 GPU_ids_str = ','.join([str(i) for i in GPU_ids])
 
 MODELS_PATH = './saved_model/'
@@ -111,17 +109,17 @@ class WareHouseDataset(Dataset):
 
 def game_data_loaders(batch_size=args['hyper_parameters']['batch_size']):
     # TODO: add progress bar during downloading the data
-    image_dir = './data_v1/'
+    image_dir = './data_ver2/'
 
     if not os.path.exists(image_dir):
         Path(image_dir).mkdir(parents=True, exist_ok=True)
 
     file_names = os.listdir(image_dir)
 
-    if not os.path.exists('./data_v1/train'):
+    if not os.path.exists('./data_ver2/train'):
 
         # Download files
-        os.system("wget 'https://www.dropbox.com/s/08vgl5wdage8nw0/data_v1.zip?dl=0' -O data.zip")
+        os.system("wget 'https://www.dropbox.com/s/m1dhowclzgz2iia/warehouse_data_ver2.zip?dl=0' -O data.zip")
         os.system("unzip -q data.zip")
         sleep(120)
         print('downloaded data successfully')
@@ -129,7 +127,7 @@ def game_data_loaders(batch_size=args['hyper_parameters']['batch_size']):
         # Remove unnecessary files
         os.listdir('./').remove('data.zip')
 
-        image_dir = './data_v1/'
+        image_dir = './data_ver2/'
         file_names = os.listdir(image_dir)
 
         # Split on train and val parts
@@ -210,7 +208,7 @@ def get_fixed_hyper_param(args):
 
 def plot_loss_update(epoch, epochs, mb, train_loss, valid_loss):
     x = [i + 1 for i in range(epoch + 1)]
-    #train_loss, valid_loss = np.log10(train_loss), np.log10(valid_loss)
+    # train_loss, valid_loss = np.log10(train_loss), np.log10(valid_loss)
     y = np.concatenate((train_loss, valid_loss))
     graphs = [[x, train_loss], [x, valid_loss]]
     x_margin = 0.2
@@ -310,15 +308,15 @@ def run_epoch(model, iterator, optimizer, criterion, master_bar, phase='train', 
         return epoch_loss / len(iterator)
 
 
-def reparameterize(mu: Tensor, logvar: Tensor) -> Tensor:
+def re_parameterize(mu: Tensor, log_var: Tensor) -> Tensor:
     """
-    Reparameterization trick to sample from N(mu, var) from
+    Re-parameterization trick to sample from N(mu, var) from
     N(0,1).
     :param mu: (Tensor) Mean of the latent Gaussian [B x D]
-    :param logvar: (Tensor) Standard deviation of the latent Gaussian [B x D]
+    :param log_var: (Tensor) Standard deviation of the latent Gaussian [B x D]
     :return: (Tensor) [B x D]
     """
-    std = torch.exp(0.5 * logvar)
+    std = torch.exp(0.5 * log_var)
     eps = torch.randn_like(std)
     return eps * std + mu
 

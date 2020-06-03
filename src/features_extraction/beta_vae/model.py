@@ -2,13 +2,13 @@
 # coding: utf-8
 
 import torch
-from torch import nn
 import torch.utils.data
+from torch import nn
 
 from src.args import args
-from src.test_modules import TestModelMethods
 from src.features_extraction.base import Encoder, Decoder, View, LossFunction, Bottleneck
-from src.utils import reparameterize, reconstruction_loss, kl_divergence, get_fixed_hyper_param, get_device
+from src.test_modules import TestModelMethods
+from src.utils import re_parameterize, reconstruction_loss, kl_divergence, get_fixed_hyper_param, get_device
 
 test = TestModelMethods()
 
@@ -22,20 +22,20 @@ class BetaVAEEncoder(Encoder, nn.Module):
         self.z_dim = z_dim
 
         self.encoder = nn.Sequential(
-            nn.Conv2d(nc, 32, 4, 2, 1),         # B,  32, 32, 32
+            nn.Conv2d(nc, 32, 4, 2, 1),  # B,  32, 32, 32
             nn.ReLU(True),
-            nn.Conv2d(32, 32, 4, 2, 1),         # B,  32, 16, 16
+            nn.Conv2d(32, 32, 4, 2, 1),  # B,  32, 16, 16
             nn.ReLU(True),
-            nn.Conv2d(32, 32, 4, 2, 1),         # B,  32,  8,  8
+            nn.Conv2d(32, 32, 4, 2, 1),  # B,  32,  8,  8
             nn.ReLU(True),
-            nn.Conv2d(32, 32, 4, 2, 1),         # B,  32,  8,  8
+            nn.Conv2d(32, 32, 4, 2, 1),  # B,  32,  8,  8
             nn.ReLU(True),
-            View((-1, 32 * 8 * 8)),             # B, 2048
-            nn.Linear(32 * 8 * 8, 512),         # B, 512
+            View((-1, 32 * 8 * 8)),  # B, 2048
+            nn.Linear(32 * 8 * 8, 512),  # B, 512
             nn.ReLU(True),
-            nn.Linear(512, 256),                # B, 256
+            nn.Linear(512, 256),  # B, 256
             nn.ReLU(True),
-            nn.Linear(256, 2 * z_dim),          # B, z_dim*2
+            nn.Linear(256, 2 * z_dim),  # B, z_dim*2
         )
 
     def forward(self, x):
@@ -53,20 +53,20 @@ class BetaVAEDecoder(Decoder, nn.Module):
         self.target_size = target_size
 
         self.decoder = nn.Sequential(
-            nn.Linear(z_dim, 256),              # B, 256
+            nn.Linear(z_dim, 256),  # B, 256
             nn.ReLU(True),
-            nn.Linear(256, 256),                    # B, 256
+            nn.Linear(256, 256),  # B, 256
             nn.ReLU(True),
-            nn.Linear(256, 32 * 8 * 8),             # B, 2048
+            nn.Linear(256, 32 * 8 * 8),  # B, 2048
             nn.ReLU(True),
-            View((-1, 32, 8, 8)),                   # B,  32,  8,  8
-            nn.ConvTranspose2d(32, 32, 4, 2, 1),    # B,  32,  8,  8
+            View((-1, 32, 8, 8)),  # B,  32,  8,  8
+            nn.ConvTranspose2d(32, 32, 4, 2, 1),  # B,  32,  8,  8
             nn.ReLU(True),
-            nn.ConvTranspose2d(32, 32, 4, 2, 1),    # B,  32, 16, 16
+            nn.ConvTranspose2d(32, 32, 4, 2, 1),  # B,  32, 16, 16
             nn.ReLU(True),
-            nn.ConvTranspose2d(32, 32, 4, 2, 1),    # B,  32, 32, 32
+            nn.ConvTranspose2d(32, 32, 4, 2, 1),  # B,  32, 32, 32
             nn.ReLU(True),
-            nn.ConvTranspose2d(32, nc, 4, 2, 1),    # B,  nc, 64, 64
+            nn.ConvTranspose2d(32, nc, 4, 2, 1),  # B,  nc, 64, 64
             nn.Tanh(),
             View(self.target_size),
         )
@@ -85,7 +85,7 @@ class BetaVAEBottleneck(Bottleneck, nn.Module):
     def forward(self, encoded):
         mu = encoded[:, :self.z_dim]
         log_var = encoded[:, self.z_dim:]
-        z = reparameterize(mu, log_var)
+        z = re_parameterize(mu, log_var)
         return z, mu, log_var
 
 
@@ -107,10 +107,11 @@ class BetaVAE(nn.Module):
 class BetaVAELossFunction(LossFunction):
     def __init__(self):
         super(BetaVAELossFunction, self).__init__()
-        self.C_max = args['beta_vae']['C_max']
-        self.GAMMA = args['beta_vae']['Gamma']
-        self.C_stop_iter = args['beta_vae']['C_stop_iter']
-        self.ITERATIONS = args['beta_vae']['num_epochs']
+        self.ITERATIONS = args['hyper_parameters']['num_epochs']
+        self.args = args['beta_vae']
+        self.C_max = self.args['C_max']
+        self.GAMMA = self.args['Gamma']
+        self.C_stop_iter = self.args['C_stop_iter']
         self.C_max = torch.FloatTensor([self.C_max])
 
     def __call__(self, x, x_recon, mu, log_var, distribution='gaussian'):
@@ -122,13 +123,3 @@ class BetaVAELossFunction(LossFunction):
         loss = recon_loss + self.GAMMA * (total_kld - C).abs()
 
         return loss
-
-
-if __name__ == '__main__':
-
-    batch_size, num_of_channels, input_size, z_dim = get_fixed_hyper_param(args['hyper_parameters'])
-
-    # test model
-    model = BetaVAE(z_dim, num_of_channels, input_size)
-    loss = BetaVAELossFunction()
-    test.test_model(model, loss)
