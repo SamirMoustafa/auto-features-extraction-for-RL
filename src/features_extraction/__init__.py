@@ -1,2 +1,3 @@
-from .BetaVAE.model import BetaVAEEncoder, BetaVAEDecoder, BetaVAEBottleneck, BetaVAELossFunction
-from .ModifiedVAE.model import ModifiedVAEEncoder, ModifiedVAEDecoder, ModifiedVAELossFunction
+from .beta_vae.model import BetaVAE, BetaVAELossFunction
+from .vanilla_vae.model import VanillaVAE, VanillaVAELossFunction
+from .wasserstein_ae.model import WassersteinAE, WassersteinAELossFunction
