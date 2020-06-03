@@ -111,17 +111,17 @@ class WareHouseDataset(Dataset):
 
 def game_data_loaders(batch_size=args['hyper_parameters']['batch_size']):
     # TODO: add progress bar during downloading the data
-    image_dir = './data_v1/'
+    image_dir = './data_ver2/'
 
     if not os.path.exists(image_dir):
         Path(image_dir).mkdir(parents=True, exist_ok=True)
 
     file_names = os.listdir(image_dir)
 
-    if not os.path.exists('./data_v1/train'):
+    if not os.path.exists('./data_ver2/train'):
 
         # Download files
-        os.system("wget 'https://www.dropbox.com/s/08vgl5wdage8nw0/data_v1.zip?dl=0' -O data.zip")
+        os.system("wget 'https://www.dropbox.com/s/m1dhowclzgz2iia/warehouse_data_ver2.zip?dl=0' -O data.zip")
         os.system("unzip -q data.zip")
         sleep(120)
         print('downloaded data successfully')
@@ -129,7 +129,7 @@ def game_data_loaders(batch_size=args['hyper_parameters']['batch_size']):
         # Remove unnecessary files
         os.listdir('./').remove('data.zip')
 
-        image_dir = './data_v1/'
+        image_dir = './data_ver2/'
         file_names = os.listdir(image_dir)
 
         # Split on train and val parts
