@@ -5,10 +5,11 @@ import torch.distributions as dist
 import numpy as np
 
 from reinforcement_learning.base.rl_agent import RLAgent
-from reinforcement_learning.sac.sac_nn_models import SoftQNetwork2D, GaussianPolicyNetwork2D
+from reinforcement_learning.sac.sac_nn_models import SoftQNetwork2D, GaussianPolicyNetwork2D, SoftQNetwork1D, GaussianPolicyNetwork1D
 from reinforcement_learning.utils.nn_utils import copy_params
 from reinforcement_learning.utils.replay_buffer import ReplayBuffer
 
+import matplotlib.pyplot as plt
 
 class SACAgent(RLAgent):
     def __init__(self, state_dim, action_dim, action_range, gamma, tau, alpha, buffer_size,
@@ -28,24 +29,35 @@ class SACAgent(RLAgent):
             self.device_ = "cpu"
         self.training_mode_ = True
 
-        # TODO: Add 1D-state support
+        if (type(state_dim) == tuple or type(state_dim) == list) and len(state_dim) > 1:
+            # Critic networks
+            self.q_net_1_ = SoftQNetwork2D(action_dim).to(self.device_)
+            self.q_net_2_ = SoftQNetwork2D(action_dim).to(self.device_)
+            self.target_q_net_1_ = SoftQNetwork2D(action_dim).to(self.device_)
+            self.target_q_net_2_ = SoftQNetwork2D(action_dim).to(self.device_)
 
-        # Critic networks
-        self.q_net_1_ = SoftQNetwork2D(action_dim).to(self.device_)
-        self.q_net_2_ = SoftQNetwork2D(action_dim).to(self.device_)
-        self.target_q_net_1_ = SoftQNetwork2D(action_dim).to(self.device_)
-        self.target_q_net_2_ = SoftQNetwork2D(action_dim).to(self.device_)
+            # Policy network
+            self.policy_net_ = GaussianPolicyNetwork2D(action_dim).to(self.device_)
+        else:
+            # Critic networks
+            self.q_net_1_ = SoftQNetwork1D(state_dim, action_dim).to(self.device_)
+            self.q_net_2_ = SoftQNetwork1D(state_dim, action_dim).to(self.device_)
+            self.target_q_net_1_ = SoftQNetwork1D(state_dim, action_dim).to(self.device_)
+            self.target_q_net_2_ = SoftQNetwork1D(state_dim, action_dim).to(self.device_)
+
+            # Policy network
+            self.policy_net_ = GaussianPolicyNetwork1D(state_dim, action_dim).to(self.device_)
+
         for target_param, param in zip(self.target_q_net_1_.parameters(), self.q_net_1_.parameters()):
             target_param.data.copy_(param)
         for target_param, param in zip(self.target_q_net_2_.parameters(), self.q_net_2_.parameters()):
             target_param.data.copy_(param)
-        copy_params(self.q_net_1_, self.target_q_net_1_)
-        copy_params(self.q_net_2_, self.target_q_net_2_)
+        #copy_params(self.q_net_1_, self.target_q_net_1_)
+        #copy_params(self.q_net_2_, self.target_q_net_2_)
+
         self.q_1_optimizer_ = optim.Adam(self.q_net_1_.parameters(), lr=critic_lr)
         self.q_2_optimizer_ = optim.Adam(self.q_net_2_.parameters(), lr=critic_lr)
 
-        # Policy network
-        self.policy_net_ = GaussianPolicyNetwork2D(action_dim).to(self.device_)
         self.policy_optimizer_ = optim.Adam(self.policy_net_.parameters(), lr=actor_lr)
 
         # Entropy optimization
@@ -94,6 +106,7 @@ class SACAgent(RLAgent):
         self.set_eval_mode(False)
 
         states, actions, rewards, next_states, dones = self.replay_buffer_.sample_random_batch(batch_size)
+        plt.imshow(states[0])
         states = torch.FloatTensor(states).to(self.device_)
         actions = torch.FloatTensor(actions).to(self.device_)
         rewards = torch.FloatTensor(rewards).to(self.device_)
