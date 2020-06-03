@@ -85,7 +85,7 @@ class DataWrapper():
   
   def get_transformation(self):
     cl_jitter = transforms.ColorJitter(brightness = 0.7, contrast = 0.7, saturation = 0.7, hue = 0.2)
-    transformation = transforms.Compose([transforms.RandomResizedCrop(size = self.in_shape[0], scale = (0.7, 1.0)),
+    transformation = transforms.Compose([transforms.RandomResizedCrop(size = self.in_shape[0], scale = (0.6, 1.0)),
                                          transforms.RandomHorizontalFlip(),
                                          transforms.RandomApply([cl_jitter], p = 0.5),
                                          GaussianBlur(int(0.1 * self.in_shape[0])),
