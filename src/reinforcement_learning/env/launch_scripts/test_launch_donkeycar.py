@@ -77,7 +77,7 @@ def simulate(env):
                 plt.plot(rewards)
                 # plt.show()
                 plt.imshow(observation)
-                # plt.show()
+                plt.show()
 
             '''
             if t % 25 == 0:
@@ -99,8 +99,8 @@ def simulate(env):
 
 
 # SET UP ENVIRONMENT
-exe_path = os.path.abspath('env/') + "/third_party_environments/gym-donkeycar/apps/donkey_sim_custom_build.x86_64"
-exe_path = ""  # If you have running game in Unity
+exe_path = os.path.abspath('env/') + "/third_party_environments/gym-donkeycar/apps/new_releases/donkey_sim_custom_build.x86_64"
+# exe_path = ""  # If you have running game in Unity
 port = 9091
 
 env_list = [
