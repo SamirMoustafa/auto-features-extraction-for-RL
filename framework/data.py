@@ -82,39 +82,39 @@ class GaussianBlur(object):
 
 
 class DataWrapper():
-    def __init__(self, batch_size, validation_set_size, in_shape, data_path):
-        self.batch_size = batch_size
-        self.validation_set_size = validation_set_size
-        self.in_shape = in_shape
-        self.data_path = data_path
+  def __init__(self, batch_size, validation_set_size, in_shape, data_path):
+    self.batch_size = batch_size
+    self.validation_set_size = validation_set_size
+    self.in_shape = in_shape
+    self.data_path = data_path
+  
+  def get_transformation(self):
+    cl_jitter = transforms.ColorJitter(brightness = 0.7, contrast = 0.7, saturation = 0.7, hue = 0.2)
+    transformation = transforms.Compose([transforms.RandomResizedCrop(size = self.in_shape[0], scale = (0.6, 1.0)),
+                                         transforms.RandomHorizontalFlip(),
+                                         transforms.RandomApply([cl_jitter], p = 0.5),
+                                         GaussianBlur(int(0.1 * self.in_shape[0])),
+                                         transforms.ToTensor()])
+    return transformation
 
-    def get_transformation(self):
-        cl_jitter = transforms.ColorJitter(brightness=0.7, contrast=0.7, saturation=0.7, hue=0.2)
-        transformation = transforms.Compose([transforms.RandomResizedCrop(size=self.in_shape[0], scale=(0.7, 1.0)),
-                                             transforms.RandomHorizontalFlip(),
-                                             transforms.RandomApply([cl_jitter], p=0.5),
-                                             GaussianBlur(int(0.1 * self.in_shape[0])),
-                                             transforms.ToTensor()])
-        return transformation
+  def get_dataset(self, path):
+    dataset = CustomDataset(path, transform = ImageTransformation(self.get_transformation()))
+    return dataset
 
-    def get_dataset(self, path):
-        dataset = CustomDataset(path, transform=ImageTransformation(self.get_transformation()))
-        return dataset
+  def get_loaders(self):
+    dataset = self.get_dataset(self.data_path)
+    num_train = len(dataset)
+    indices = list(range(num_train))
+    np.random.shuffle(indices)
 
-    def get_loaders(self):
-        dataset = self.get_dataset(self.data_path)
-        num_train = len(dataset)
-        indices = list(range(num_train))
-        np.random.shuffle(indices)
+    split = int(np.floor(self.validation_set_size * num_train))
+    train_idx, valid_idx = indices[split:], indices[:split]
 
-        split = int(np.floor(self.validation_set_size * num_train))
-        train_idx, valid_idx = indices[split:], indices[:split]
+    train_sampler = SubsetRandomSampler(train_idx)
+    val_sampler = SubsetRandomSampler(valid_idx)
 
-        train_sampler = SubsetRandomSampler(train_idx)
-        val_sampler = SubsetRandomSampler(valid_idx)
-
-        train_iterator = DataLoader(dataset, batch_size=self.batch_size, sampler=train_sampler,
-                                    num_workers=4, pin_memory=True, drop_last=True)
-        val_iterator = DataLoader(dataset, batch_size=self.batch_size, sampler=val_sampler,
-                                  num_workers=4, pin_memory=True, drop_last=True)
-        return train_iterator, val_iterator
+    train_iterator = DataLoader(dataset, batch_size = self.batch_size, sampler = train_sampler, 
+                                num_workers = 4, pin_memory = True, drop_last = True)
+    val_iterator = DataLoader(dataset, batch_size = self.batch_size, sampler = val_sampler, 
+                              num_workers = 4, pin_memory = True, drop_last = True)
+    return train_iterator, val_iterator
