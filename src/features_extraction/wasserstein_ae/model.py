@@ -3,14 +3,13 @@
 
 
 import torch
-from torch import nn
-import torch.nn.functional as F
 import torch.utils.data
+from torch import nn
 
 from src.args import args
+from src.features_extraction.base import Encoder, Decoder, View, LossFunction
 from src.test_modules import TestModelMethods
 from src.utils import get_fixed_hyper_param, reconstruction_loss
-from src.features_extraction.base import Encoder, Decoder, View, LossFunction
 
 test = TestModelMethods()
 
@@ -21,20 +20,20 @@ class WassersteinAEncoder(Encoder, nn.Module):
         self.z_dim = z_dim
         self.nc = nc
         self.encoder = nn.Sequential(
-            nn.Conv2d(nc, 32, 4, 2, 1),         # B,  32, 32, 32
+            nn.Conv2d(nc, 32, 4, 2, 1),  # B,  32, 32, 32
             nn.ReLU(True),
-            nn.Conv2d(32, 32, 4, 2, 1),         # B,  32, 16, 16
+            nn.Conv2d(32, 32, 4, 2, 1),  # B,  32, 16, 16
             nn.ReLU(True),
-            nn.Conv2d(32, 32, 4, 2, 1),         # B,  32,  8,  8
+            nn.Conv2d(32, 32, 4, 2, 1),  # B,  32,  8,  8
             nn.ReLU(True),
-            nn.Conv2d(32, 32, 4, 2, 1),         # B,  32,  8,  8
+            nn.Conv2d(32, 32, 4, 2, 1),  # B,  32,  8,  8
             nn.ReLU(True),
-            View((-1, 32 * 8 * 8)),             # B, 2048
-            nn.Linear(32 * 8 * 8, 512),         # B, 512
+            View((-1, 32 * 8 * 8)),  # B, 2048
+            nn.Linear(32 * 8 * 8, 512),  # B, 512
             nn.ReLU(True),
-            nn.Linear(512, 256),                # B, 256
+            nn.Linear(512, 256),  # B, 256
             nn.ReLU(True),
-            nn.Linear(256, z_dim),          # B, z_dim*2
+            nn.Linear(256, z_dim),  # B, z_dim*2
         )
 
     def forward(self, x):
@@ -50,20 +49,20 @@ class WassersteinADecoder(Decoder, nn.Module):
         self.target_size = target_size
 
         self.decoder = nn.Sequential(
-            nn.Linear(z_dim, 256),              # B, 256
+            nn.Linear(z_dim, 256),  # B, 256
             nn.ReLU(True),
-            nn.Linear(256, 256),                    # B, 256
+            nn.Linear(256, 256),  # B, 256
             nn.ReLU(True),
-            nn.Linear(256, 32 * 8 * 8),             # B, 2048
+            nn.Linear(256, 32 * 8 * 8),  # B, 2048
             nn.ReLU(True),
-            View((-1, 32, 8, 8)),                   # B,  32,  8,  8
-            nn.ConvTranspose2d(32, 32, 4, 2, 1),    # B,  32,  8,  8
+            View((-1, 32, 8, 8)),  # B,  32,  8,  8
+            nn.ConvTranspose2d(32, 32, 4, 2, 1),  # B,  32,  8,  8
             nn.ReLU(True),
-            nn.ConvTranspose2d(32, 32, 4, 2, 1),    # B,  32, 16, 16
+            nn.ConvTranspose2d(32, 32, 4, 2, 1),  # B,  32, 16, 16
             nn.ReLU(True),
-            nn.ConvTranspose2d(32, 32, 4, 2, 1),    # B,  32, 32, 32
+            nn.ConvTranspose2d(32, 32, 4, 2, 1),  # B,  32, 32, 32
             nn.ReLU(True),
-            nn.ConvTranspose2d(32, nc, 4, 2, 1),    # B,  nc, 64, 64
+            nn.ConvTranspose2d(32, nc, 4, 2, 1),  # B,  nc, 64, 64
             nn.Tanh(),
             View(self.target_size),
         )
@@ -124,14 +123,3 @@ class WassersteinAELossFunction(LossFunction):
         loss = recon_loss + mmd_loss
 
         return loss
-
-
-if __name__ == '__main__':
-
-    batch_size, num_of_channels, input_size, z_dim = get_fixed_hyper_param(args['hyper_parameters'])
-    reg_weight = args['wasserstein_ae']['reg_weight']
-
-    # test model
-    model = WassersteinAE(z_dim, num_of_channels, input_size)
-    loss = WassersteinAELossFunction(reg_weight)
-    test.test_model(model, loss)
