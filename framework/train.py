@@ -93,3 +93,5 @@ def train(model, device, export_name, lr, weight_decay, gamma, step_size, n_epoc
         print('Current train loss: ', train_loss_history[-1])
         print('Current val loss: ', val_loss_history[-1])
         print('best val loss: ', best_val_loss)
+
+    return train_loss_history, val_loss_history
