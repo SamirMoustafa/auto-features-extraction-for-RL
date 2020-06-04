@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.distributions as dist
 import torch.nn.functional as F
+import numpy as np
 
 from reinforcement_learning.base.rl_agent import RLAgent
 from reinforcement_learning.ddqn.ddqn_nn_models import DDQNNetwork2D
@@ -28,45 +29,23 @@ class DDQNAgent(RLAgent):
         self.model_ = DDQNNetwork2D(action_dim).to(self.device_)
         self.model_target_ = DDQNNetwork2D(action_dim).to(self.device_)
 
+        self.optimizer_ = torch.optim.Adam(self.model_.parameters(), lr=lr)
+        self.optimizer_target_ = torch.optim.Adam(self.model2.parameters(), lr=lr)
 
-
-
-        self.optimizer1 = torch.optim.Adam(self.model1.parameters())
-        self.optimizer2 = torch.optim.Adam(self.model2.parameters())
-
-
-
-
-
-
-
-
-
-
-        self.critic_ = CriticNetwork2D(action_dim).to(self.device_)
-        self.critic_target_ = CriticNetwork2D(action_dim).to(self.device_)
-
-        self.actor_ = ActorNetwork2D(action_dim).to(self.device_)
-        self.actor_target_ = ActorNetwork2D(action_dim).to(self.device_)
-
-        copy_params(self.critic_, self.critic_target_)
-        copy_params(self.actor_, self.actor_target_)
-
-        self.critic_optimizer_ = optim.Adam(self.critic_.parameters(), lr=critic_lr)
-        self.actor_optimizer_ = optim.Adam(self.actor_.parameters(), lr=actor_lr)
-
-        # self.noise_gen_ = OUNoiseGenerator(action_dim, action_low, action_high)
+        # copy_params(self.model_, self.model_target_)
 
         self.replay_buffer_ = ReplayBuffer(buffer_size)
 
-    def get_action(self, state):
+    def get_action(self, state, eps=0.20):
         state = torch.FloatTensor(state).unsqueeze(0).to(self.device_)
-        action = self.actor_.forward(state)
-        return action.squeeze(0).cpu().detach().numpy()
+        action = self.model_.forward(state)
+
+        action = np.argmax(action.cpu().detach().numpy())
+        return action  # action.squeeze(0).cpu().detach().numpy()
 
     def train_step(self, batch_size):
         # states, actions, rewards, next_states, _ = self.replay_buffer_.sample_random_batch(batch_size)
-        state_batch, action_batch, reward_batch, next_state_batch, _ = self.replay_buffer_.sample_random_batch(
+        state_batch, action_batch, reward_batch, next_state_batch, done_batch = self.replay_buffer_.sample_random_batch(
             batch_size)
         state_batch = torch.FloatTensor(state_batch).to(self.device_)
         action_batch = torch.FloatTensor(action_batch).to(self.device_)
@@ -74,53 +53,61 @@ class DDQNAgent(RLAgent):
         next_state_batch = torch.FloatTensor(next_state_batch).to(self.device_)
         # masks = torch.FloatTensor(masks).to(self.device_)
 
-        current_q = self.critic_.forward(state_batch, action_batch)
-        next_actions = self.actor_target_.forward(next_state_batch)
-        next_q = self.critic_target_.forward(next_state_batch, next_actions.detach())
-        expected_q = reward_batch + self.gamma_ * next_q
+        print(action_batch.shape)
 
-        # update critic
-        q_loss = F.mse_loss(current_q, expected_q.detach())
+        action_batch = action_batch.view(action_batch.size(0), 1)
 
-        self.critic_optimizer_.zero_grad()
-        q_loss.backward()
-        self.critic_optimizer_.step()
+        # compute loss
+        current_q = self.model_.forward(state_batch).gather(1, action_batch)
+        current_q_target = self.model_target_.forward(state_batch).gather(1, action_batch)
 
-        # update actor
-        policy_loss = -self.critic_.forward(state_batch, self.actor_.forward(state_batch)).mean()
+        next_q = self.model_.forward(next_state_batch)
+        next_q_target = self.model_target_.forward(next_state_batch)
 
-        self.actor_optimizer_.zero_grad()
-        policy_loss.backward()
-        self.actor_optimizer_.step()
+        next_Q = torch.min(
+            torch.max(self.model_.forward(next_state_batch), 1)[0],
+            torch.max(self.model_target_.forward(next_state_batch), 1)[0]
+        )
+
+        next_Q = next_Q.view(next_Q.size(0), 1)
+        expected_Q = reward_batch + (1 - done_batch) * self.gamma_ * next_Q
+
+        loss = F.mse_loss(current_q, expected_Q.detach())
+        loss_target = F.mse_loss(current_q_target, expected_Q.detach())
+
+        self.update(loss, loss_target)
+
+    def update(self, loss, loss_target):
+        self.optimizer_.zero_grad()
+        loss.backward()
+        self.optimizer_.step()
+
+        self.optimizer_target_.zero_grad()
+        loss_target.backward()
+        self.optimizer_target_.step()
 
         # update target networks
-        for target_param, param in zip(self.actor_target_.parameters(), self.actor_.parameters()):
-            target_param.data.copy_(param.data * self.tau_ + target_param.data * (1.0 - self.tau_))
-
-        for target_param, param in zip(self.critic_target_.parameters(), self.critic_.parameters()):
-            target_param.data.copy_(param.data * self.tau_ + target_param.data * (1.0 - self.tau_))
+        # for target_param, param in zip(self.model_target_.parameters(), self.model_.parameters()):
+        #     target_param.data.copy_(param.data * self.tau_ + target_param.data * (1.0 - self.tau_))
 
     def save_checkpoint(self, checkpoint_path):
-        torch.save({'critic': self.critic_.state_dict(),
-                    'actor': self.actor_.state_dict()},
+        torch.save({'q_model': self.model_.state_dict(),
+                    'target_model': self.model_target_.state_dict()},
                    checkpoint_path)
 
     def load_checkpoint(self, checkpoint_path):
         loaded = torch.load(checkpoint_path)
-        self.critic_.load_state_dict(loaded['critic'])
-        self.actor_.load_state_dict(loaded['actor'])
-        copy_params(self.critic_, self.critic_target_)
-        copy_params(self.actor_, self.actor_target_)
+        self.model_.load_state_dict(loaded['q_model'])
+        self.model_target_.load_state_dict(loaded['target_model'])
+        # copy_params(self.model_, self.model_target_)
 
     def set_eval_mode(self, mode):
         self.training_mode_ = not mode
         if mode is False:
-            self.critic_.eval()
-            self.critic_target_.eval()
-            self.actor_.eval()
-            self.actor_target_.eval()
+            self.model_.eval()
+            self.model_target_.eval()
         else:
-            self.critic_.train()
-            self.critic_target_.train()
-            self.actor_.train()
-            self.actor_target_.train()
+            self.model_.train()
+            self.model_target_.train()
+
+

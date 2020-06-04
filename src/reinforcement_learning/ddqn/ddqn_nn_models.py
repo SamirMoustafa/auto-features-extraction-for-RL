@@ -33,5 +33,6 @@ class DDQNNetwork2D(nn.Module):
         q_values = self.linear_.forward(features)
         return q_values
 
+    '''
     def feature_size(self, input_dim):
-        return self.conv_.forward(torch.zeros(1, *input_dim)).view(1, -1).size(1)
+        return self.conv_.forward(torch.zeros(1, *input_dim)).view(1, -1).size(1)'''
