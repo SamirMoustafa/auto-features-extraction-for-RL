@@ -1,20 +1,21 @@
 import unittest
 
-from src.utils import mnist_NxN_loader
+from src.utils import game_data_loaders
 
 
 class TestModelMethods(unittest.TestCase):
 
     def test_model(self, model, loss):
-        train_loader, test_loader = mnist_NxN_loader()
+        data_loaders = game_data_loaders()
+        train_loaders, val_loaders = data_loaders['train'], data_loaders['val']
 
-        print('num_batches_train:', len(train_loader))
-        print('num_batches_test:', len(test_loader))
-        print('x_batch_shape:', next(iter(train_loader))[0].shape)
-        print('y_batch_shape:', next(iter(train_loader))[1].shape)
+        print('num_batches_train:', len(train_loaders))
+        print('num_batches_val:', len(val_loaders))
+        print('x_batch_shape:', next(iter(train_loaders))[0].shape)
+        print('y_batch_shape:', next(iter(train_loaders))[1].shape)
 
         # input
-        x = next(iter(train_loader))[0]
+        x = next(iter(train_loaders))
 
         # test model
         out_puts = model(x)
