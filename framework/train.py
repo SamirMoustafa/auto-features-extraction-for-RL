@@ -11,13 +11,16 @@ import numpy as np
 from aux import *
 
 
-def train(model, device, export_name, lr, weight_decay, gamma, step_size, n_epochs, cloud, train_iterator, val_iterator, criterion):
+def train(model, device, export_name, lr, weight_decay, gamma, step_size, n_epochs, cloud, train_iterator, val_iterator, criterion, scheduler_type):
 
     if not cloud:
         writer = SummaryWriter(f'log/{export_name}')
     optimizer = torch.optim.Adam(model.parameters(), lr = lr, weight_decay = weight_decay)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, gamma = gamma, step_size = step_size)
-
+    if (scheduler_type) == 'StepLR':
+        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, gamma = gamma, step_size = step_size)
+        
+    elif (scheduler_type == 'ReduceLROnPlateau'):
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode = 'min', factor = 0.5, patience = 5, threshold = 2e-2, min_lr = 5e-5, cooldown = 1)
     train_iters = 0
 
     best_val_loss = np.inf
@@ -68,7 +71,10 @@ def train(model, device, export_name, lr, weight_decay, gamma, step_size, n_epoc
         if not cloud:           
             writer.add_scalar('val loss', total_val_loss, global_step = epoch + 1)
 
-        scheduler.step()
+        if scheduler_type == 'StepLR':
+            scheduler.step()
+        elif scheduler_type == 'ReduceLROnPlateau':
+            scheduler.step(total_val_loss)
         
         if not cloud:
             writer.add_scalar('lr_decay', scheduler.get_lr()[0], global_step = epoch + 1)
@@ -87,3 +93,5 @@ def train(model, device, export_name, lr, weight_decay, gamma, step_size, n_epoc
         print('Current train loss: ', train_loss_history[-1])
         print('Current val loss: ', val_loss_history[-1])
         print('best val loss: ', best_val_loss)
+
+    return train_loss_history, val_loss_history
