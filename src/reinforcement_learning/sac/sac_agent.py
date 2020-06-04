@@ -103,10 +103,12 @@ class SACAgent(RLAgent):
             return self.rescale_action_(action)
 
     def train_step(self, batch_size):
+        if len(self.replay_buffer_) < batch_size:
+            return
+
         self.set_eval_mode(False)
 
         states, actions, rewards, next_states, dones = self.replay_buffer_.sample_random_batch(batch_size)
-        plt.imshow(states[0])
         states = torch.FloatTensor(states).to(self.device_)
         actions = torch.FloatTensor(actions).to(self.device_)
         rewards = torch.FloatTensor(rewards).to(self.device_)
