@@ -6,12 +6,13 @@ import torch
 
 
 class DonkeyCarEnvironment:
-    EXEC_REL_PATH = "/gym-donkeycar/apps/donkey_sim_custom_build.x86_64"
+    # EXEC_REL_PATH = "/gym-donkeycar/apps/donkey_sim_custom_build.x86_64"
+    EXEC_REL_PATH = "/gym-donkeycar/apps/new_releases/donkey_sim_custom_build.x86_64"
     PORT = 9090
     ENV_NAME = "donkey-warehouse-v0"
 
     def __init__(self, third_party_envs_path, encoder=None):
-        self.env_ = gym.make(self.ENV_NAME, exe_path=third_party_envs_path+self.EXEC_REL_PATH, port=self.PORT)
+        self.env_ = gym.make(self.ENV_NAME, exe_path=third_party_envs_path+self.EXEC_REL_PATH, port=self.PORT, max_cte=20.0)
         self.encoder_ = None
         print(type(self.env_.observation_space))
 
@@ -30,9 +31,9 @@ class DonkeyCarEnvironment:
             return self.encoder_.forward(torch.tensor(observation).unsqueeze(dim=0)).squeeze().numpy()
 
     def step(self, action):
-        observation, reward, done, _ = self.env_.step(action)
+        observation, reward, done, info = self.env_.step(action)
         observation = np.transpose(observation, (2, 0, 1))
-        return observation, reward, done
+        return observation, reward, done, info
 
     def close(self):
         self.env_.close()

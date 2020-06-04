@@ -1,5 +1,7 @@
 from reinforcement_learning.scenario.teleop.teleop import Teleoperator
 from queue import Queue
+import matplotlib.pyplot as plt
+from torchvision import transforms
 
 
 class RLTrainScenario:
@@ -24,13 +26,17 @@ class RLTrainScenario:
         exploration_mode = True
         state = self.env_.reset()
 
+        plt.imshow(state.transpose(1, 2, 0))
+        plt.show()
+
         # Stage 1: Exploration
         while shared_dict["exploration_mode"]:
             if not shared_dict["manual_mode"]:
                 action = self.env_.env_.action_space.sample()
             else:
                 action = shared_dict["action"]
-            next_state, reward, done = self.env_.step(action)
+            next_state, reward, done, info = self.env_.step(action)
+            print(info)
             self.agent_.replay_buffer_.push(state, action, reward, next_state, done)
             state = next_state
             if done:
@@ -49,7 +55,7 @@ class RLTrainScenario:
                 else:
                     action = shared_dict["action"]
 
-                next_state, reward, done = self.env_.step(action)
+                next_state, reward, done, info = self.env_.step(action)
                 self.agent_.replay_buffer_.push(state, action, reward, next_state, done)
                 episode_reward += reward
                 total_steps += 1

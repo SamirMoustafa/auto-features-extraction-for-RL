@@ -41,7 +41,6 @@ class DDQNAgent(RLAgent):
         state = torch.FloatTensor(state).unsqueeze(0).to(self.device_)
         action = self.model_.forward(state)
 
-        # action = np.argmax(action.cpu().detach().numpy())
         return action.squeeze(0).cpu().detach().numpy()
 
     def train_step(self, batch_size):
