@@ -68,10 +68,10 @@ class Teleoperator:
             control_key = True
         if control_key:
             # self.control_throttle_, self.control_steering_ = self.control(self.x_, self.theta_,
-            #                                                               self.control_throttle_,
-            #                                                               self.control_steering_)
-            #self.action_queue_.put([self.control_steering_, self.control_throttle_])
-            #self.shared_dict_["action"] = [self.control_steering_, self.control_throttle_]
+            #                                                                self.control_throttle_,
+            #                                                                self.control_steering_)
+            # self.action_queue_.put([self.control_steering_, self.control_throttle_])
+            # self.shared_dict_["action"] = [self.control_steering_, self.control_throttle_]
             action = np.clip([self.theta_, self.x_], self.action_space_.low, self.action_space_.high)
             self.shared_dict_["action"] = action
 
