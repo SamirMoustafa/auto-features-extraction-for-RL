@@ -33,7 +33,7 @@ class Bottleneck(metaclass=ABCMeta):
         pass
 
 
-class LossFunction(metaclass=ABCMeta):
+class LossFunction(nn.Module, metaclass=ABCMeta):
     def __init__(self):
         super(LossFunction, self).__init__()
 
