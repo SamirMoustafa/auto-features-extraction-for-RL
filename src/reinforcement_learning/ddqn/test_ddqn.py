@@ -1,6 +1,8 @@
 import numpy as np
 import gym
 from skimage.transform import resize
+from reinforcement_learning.ddqn.ddqn_agent import DDQNAgent
+from reinforcement_learning.scenario.progress.neptune_progress_reporter import NeptuneProgressReporter
 
 
 def render_to_img(env):
@@ -10,7 +12,7 @@ def render_to_img(env):
     return resize(img, (128, 128)).transpose((2, 0, 1))
 
 
-def run_training(env, agent, max_episodes, max_steps, batch_size):
+def run_training(env, agent, max_episodes, max_steps, batch_size, progress_reporter):
     episode_rewards = []
 
     for episode in range(max_episodes):
@@ -31,6 +33,7 @@ def run_training(env, agent, max_episodes, max_steps, batch_size):
             if done or step == max_steps - 1:
                 episode_rewards.append(episode_reward)
                 print("Episode " + str(episode) + ": " + str(episode_reward))
+                progress_reporter.report_episode_reward(episode, episode_reward)
                 break
 
             state = next_state
@@ -39,18 +42,19 @@ def run_training(env, agent, max_episodes, max_steps, batch_size):
 
 
 def main():
-    env = gym.make("Pendulum-v0")
-    agent = DDPGAgent((128, 128),
+    env = gym.make("CartPole-v0")
+    agent = DDQNAgent((128, 128),
                       env.action_space.shape[0],
                       env.action_space.low,
                       env.action_space.high,
                       gamma=0.99,
                       tau=1e-2,
                       buffer_size=100000,
-                      critic_lr=1e-3,
-                      actor_lr=1e-3)
+                      lr=1e-3)
 
-    episode_rewards = run_training(env, agent, 50, 500, 8)
+    progress_reporter = NeptuneProgressReporter("kopanevpavel/rl-ddqn",
+                                                "eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vdWkubmVwdHVuZS5haSIsImFwaV91cmwiOiJodHRwczovL3VpLm5lcHR1bmUuYWkiLCJhcGlfa2V5IjoiOTVhNDU4ZDctNGU1ZC00MjhlLTg3MmUtYTM5NDVlYTcyNjI4In0="),
+    episode_rewards = run_training(env, agent, 50, 500, 8, progress_reporter)
 
 
 if __name__ == "__main__":

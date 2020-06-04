@@ -25,6 +25,15 @@ class DDQNAgent(RLAgent):
             self.device_ = "cpu"
         self.training_mode_ = True
 
+        self.model_ = DDQNNetwork2D(action_dim).to(self.device_)
+        self.model_target_ = DDQNNetwork2D(action_dim).to(self.device_)
+
+
+
+
+        self.optimizer1 = torch.optim.Adam(self.model1.parameters())
+        self.optimizer2 = torch.optim.Adam(self.model2.parameters())
+
 
 
 

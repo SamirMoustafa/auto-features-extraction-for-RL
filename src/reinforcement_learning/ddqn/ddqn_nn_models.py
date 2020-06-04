@@ -20,6 +20,7 @@ class DDQNNetwork2D(nn.Module):
             nn.ReLU()
         )
 
+        # TODO: try 5408->128->256...
         self.linear_ = nn.Sequential(
             nn.Linear(512, 128),
             nn.ReLU(),
@@ -31,3 +32,6 @@ class DDQNNetwork2D(nn.Module):
         features = self.conv_.forward(state)
         q_values = self.linear_.forward(features)
         return q_values
+
+    def feature_size(self, input_dim):
+        return self.conv_.forward(torch.zeros(1, *input_dim)).view(1, -1).size(1)
