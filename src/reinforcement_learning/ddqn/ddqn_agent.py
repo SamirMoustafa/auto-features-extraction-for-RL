@@ -12,7 +12,7 @@ from reinforcement_learning.utils.replay_buffer import ReplayBuffer
 
 
 class DDQNAgent(RLAgent):
-    def __init__(self, state_dim, action_dim, action_low, action_high, gamma, tau, buffer_size,
+    def __init__(self, state_dim, action_dim, action_range, gamma, tau, buffer_size,
                  lr=1e-3, force_cpu=False):
         super().__init__()
 
@@ -30,18 +30,19 @@ class DDQNAgent(RLAgent):
         self.model_target_ = DDQNNetwork2D(action_dim).to(self.device_)
 
         self.optimizer_ = torch.optim.Adam(self.model_.parameters(), lr=lr)
-        self.optimizer_target_ = torch.optim.Adam(self.model2.parameters(), lr=lr)
+        self.optimizer_target_ = torch.optim.Adam(self.model_target_.parameters(), lr=lr)
 
-        # copy_params(self.model_, self.model_target_)
+        copy_params(self.model_, self.model_target_)
 
         self.replay_buffer_ = ReplayBuffer(buffer_size)
+        self.mse_criterion_ = nn.MSELoss()
 
     def get_action(self, state, eps=0.20):
         state = torch.FloatTensor(state).unsqueeze(0).to(self.device_)
         action = self.model_.forward(state)
 
-        action = np.argmax(action.cpu().detach().numpy())
-        return action  # action.squeeze(0).cpu().detach().numpy()
+        # action = np.argmax(action.cpu().detach().numpy())
+        return action.squeeze(0).cpu().detach().numpy()
 
     def train_step(self, batch_size):
         # states, actions, rewards, next_states, _ = self.replay_buffer_.sample_random_batch(batch_size)
@@ -51,29 +52,29 @@ class DDQNAgent(RLAgent):
         action_batch = torch.FloatTensor(action_batch).to(self.device_)
         reward_batch = torch.FloatTensor(reward_batch).to(self.device_)
         next_state_batch = torch.FloatTensor(next_state_batch).to(self.device_)
+        done_batch = torch.FloatTensor(done_batch).to(self.device_)
+        done_batch = done_batch.view(done_batch.size(0), 1)
         # masks = torch.FloatTensor(masks).to(self.device_)
 
-        print(action_batch.shape)
-
-        action_batch = action_batch.view(action_batch.size(0), 1)
+        # print(state_batch.shape, action_batch.shape)
 
         # compute loss
-        current_q = self.model_.forward(state_batch).gather(1, action_batch)
-        current_q_target = self.model_target_.forward(state_batch).gather(1, action_batch)
+        current_q = self.model_.forward(state_batch)  # .gather(1, action_batch)
+        current_q_target = self.model_target_.forward(state_batch)  # .gather(1, action_batch)
 
         next_q = self.model_.forward(next_state_batch)
         next_q_target = self.model_target_.forward(next_state_batch)
 
         next_Q = torch.min(
-            torch.max(self.model_.forward(next_state_batch), 1)[0],
-            torch.max(self.model_target_.forward(next_state_batch), 1)[0]
+            torch.max(next_q, 1)[0],
+            torch.max(next_q_target, 1)[0]
         )
 
         next_Q = next_Q.view(next_Q.size(0), 1)
         expected_Q = reward_batch + (1 - done_batch) * self.gamma_ * next_Q
 
-        loss = F.mse_loss(current_q, expected_Q.detach())
-        loss_target = F.mse_loss(current_q_target, expected_Q.detach())
+        loss = self.mse_criterion_.forward(current_q, expected_Q.detach())
+        loss_target = self.mse_criterion_.forward(current_q_target, expected_Q.detach())
 
         self.update(loss, loss_target)
 
@@ -87,8 +88,8 @@ class DDQNAgent(RLAgent):
         self.optimizer_target_.step()
 
         # update target networks
-        # for target_param, param in zip(self.model_target_.parameters(), self.model_.parameters()):
-        #     target_param.data.copy_(param.data * self.tau_ + target_param.data * (1.0 - self.tau_))
+        for target_param, param in zip(self.model_target_.parameters(), self.model_.parameters()):
+            target_param.data.copy_(param.data * self.tau_ + target_param.data * (1.0 - self.tau_))
 
     def save_checkpoint(self, checkpoint_path):
         torch.save({'q_model': self.model_.state_dict(),

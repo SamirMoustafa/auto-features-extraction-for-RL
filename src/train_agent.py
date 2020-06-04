@@ -3,6 +3,7 @@ import os
 from reinforcement_learning.scenario.rl_train_scenario import RLTrainScenario
 from reinforcement_learning.ddpg.ddpg_agent import DDPGAgent
 from reinforcement_learning.sac.sac_agent import SACAgent
+from reinforcement_learning.ddqn.ddqn_agent import DDQNAgent
 from reinforcement_learning.env.wrappers.donkey_wrapper import DonkeyCarEnvironment
 from reinforcement_learning.scenario.progress.neptune_progress_reporter import NeptuneProgressReporter
 from reinforcement_learning.scenario.progress.console_progress_reporter import ConsoleProgressReporter
@@ -37,7 +38,13 @@ def main(agent_type):
                          force_cpu=True)
 
     elif agent_type == 'DDQNAgent':
-        return
+        agent = DDQNAgent(env.env_.observation_space.shape,
+                          env.action_space.shape[0],
+                          [env.action_space.low, env.action_space.high],
+                          gamma=0.99,
+                          tau=1e-2,
+                          buffer_size=100000,
+                          lr=1e-3)
 
     else:
         assert False, 'You can pick DDPGAgent, SACAgent or DDQNAgent'
