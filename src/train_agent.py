@@ -1,15 +1,26 @@
 import os
 import torch
 
-from reinforcement_learning.scenario.rl_train_scenario import RLTrainScenario
-from reinforcement_learning.ddpg.ddpg_agent import DDPGAgent
-from reinforcement_learning.sac.sac_agent import SACAgent
-from reinforcement_learning.env.wrappers.donkey_wrapper import DonkeyCarEnvironment
-from reinforcement_learning.scenario.progress.neptune_progress_reporter import NeptuneProgressReporter
-from reinforcement_learning.scenario.progress.console_progress_reporter import ConsoleProgressReporter
+from src.reinforcement_learning.scenario.rl_train_scenario import RLTrainScenario
+#from reinforcement_learning.ddpg.ddpg_agent import DDPGAgent
+from src.reinforcement_learning.sac.sac_agent import SACAgent
+from src.reinforcement_learning.env.wrappers.donkey_wrapper import DonkeyCarEnvironment
+from src.reinforcement_learning.scenario.progress.neptune_progress_reporter import NeptuneProgressReporter
+from src.reinforcement_learning.scenario.progress.console_progress_reporter import ConsoleProgressReporter
 
-from features_extraction.JigsawVAE.model import JigsawVAE
-from features_extraction.CLR.checkCLRonRL import CustomSimCLR50, CustomSimCLR18
+# from features_extraction.JigsawVAE.model import JigsawVAE
+# from features_extraction.CLR.checkCLRonRL import CustomSimCLR50, CustomSimCLR18
+from src.features_extraction.vanilla_vae.model import VanillaVAE
+from src.features_extraction.beta_vae.model import BetaVAE
+
+from src.args import args
+from src.utils import get_fixed_hyper_param
+
+
+def rescale_state(state, minimum=-3500.0, maximum=3000.0):
+    length = maximum - minimum
+    return (state - minimum) / length
+
 
 def main():
 
@@ -24,16 +35,27 @@ def main():
     #                   actor_lr=1e-4,
     #                   force_cpu=True)
 
-    autoencoder = JigsawVAE(image_size=128, channel_num=3, kernel_num=224, z_size=64).cpu()
-    autoencoder.load_state_dict(torch.load('best_model.pth', map_location=lambda storage, loc: storage))
-    autoencoder.cpu()
+    # autoencoder = JigsawVAE(image_size=128, channel_num=3, kernel_num=224, z_size=64).cpu()
+    # autoencoder.load_state_dict(torch.load('best_model.pth', map_location=lambda storage, loc: storage))
+    # autoencoder.cpu()
 
     # clr_model = CustomSimCLR18(5, 64, 128)
     # checkpoint = torch.load("CustomSimCLR18best_model.pth", map_location=lambda storage, loc: storage)
     # clr_model.load_state_dict(checkpoint['state_dict'])
 
+    _, num_of_channels, input_size, z_dim = get_fixed_hyper_param(args['hyper_parameters'])
+
+    # vae = VanillaVAE(z_dim, num_of_channels, input_size)
+    # vae.load_state_dict(torch.load("../saved_model/VanillaVAE.best.pth"))
+    vae = BetaVAE(z_dim, num_of_channels, input_size).cpu()
+    vae.load_state_dict(torch.load("../saved_model/BetaVAE.best.pth", map_location=lambda storage, loc: storage))
+    vae = vae.cpu()
+    vae.eval()
+    encode_fn = lambda img: rescale_state(vae.bottleneck.forward(vae.encoder.forward(torch.FloatTensor(img).unsqueeze(dim=0)))[0].squeeze().numpy(),
+                                          minimum=-1e+17, maximum=1e+17)
+
     env = DonkeyCarEnvironment(os.path.abspath("./reinforcement_learning/env/third_party_environments/"),
-                               encoder=autoencoder)
+                               encoder_fn=encode_fn)
 
     agent = SACAgent(env.observation_space.shape[0],
                      env.action_space.shape[0],

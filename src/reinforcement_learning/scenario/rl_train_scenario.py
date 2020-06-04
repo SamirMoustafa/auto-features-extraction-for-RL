@@ -31,11 +31,14 @@ class RLTrainScenario:
             state = next_state
             if done:
                 state = self.env_.reset()
+                teleop.reset()
 
         print("Exploration finished, start training")
         episode_rewards = []
         total_steps = 0
         for episode in range(self.n_episodes_):
+            teleop.reset()
+            self.env_.step(np.array([0.0, 0.0]))
             state = self.env_.reset()
             episode_reward = 0
 
@@ -45,7 +48,7 @@ class RLTrainScenario:
                     action = self.agent_.get_action(state)
                 else:
                     action = shared_dict["action"]
-                # print("State: " + str(np.max(state)) + ", " + str(np.min(state)))
+                print("State: " + str(np.max(state)) + ", " + str(np.min(state)))
                 print("Action: " + str(action))
 
                 next_state, reward, done = self.env_.step(action)
@@ -62,6 +65,7 @@ class RLTrainScenario:
                     self.agent_.train_step(self.batch_size_)
                     episode_rewards.append(episode_reward)
                     self.reporter_.report_episode_reward(episode, episode_reward)
+                    teleop.reset()
                     break
 
                 state = next_state
