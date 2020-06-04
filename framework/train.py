@@ -20,7 +20,7 @@ def train(model, device, export_name, lr, weight_decay, gamma, step_size, n_epoc
         scheduler = torch.optim.lr_scheduler.StepLR(optimizer, gamma = gamma, step_size = step_size)
         
     elif (scheduler_type == 'ReduceLROnPlateau'):
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode = 'min', factor = 0.5, patience = 3, threshold = 1e-3, min_lr = 1e-5)
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode = 'min', factor = 0.5, patience = 5, threshold = 2e-2, min_lr = 5e-5, cooldown = 1)
     train_iters = 0
 
     best_val_loss = np.inf
