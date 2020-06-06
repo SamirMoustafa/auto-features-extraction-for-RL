@@ -64,6 +64,7 @@ def write_results_csv(file_name, headers_name, row_data, operation='a'):
 
 
 torch2numpy = lambda x: x.cpu().detach().numpy()
+numpy2torch = lambda x: x.to(get_device())
 
 
 def mnist_NxN_loader(root=args['hyper_parameters']['dataset'],

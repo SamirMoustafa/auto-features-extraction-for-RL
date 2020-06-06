@@ -27,7 +27,10 @@ args = {
     },
 
     "vanilla_vae": {
-        "Z_dim": 10,
+        "M_N": 0.005,
+    },
+
+    "jigsaw_vae": {
         "M_N": 0.005,
     },
 
