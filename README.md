@@ -57,9 +57,6 @@ Features Extraction using Autoencoders and Contrastive Learning for Reinforcemen
 │   │   ├── aae
 │   │   │   ├── __init__.py
 │   │   │   ├── model.py
-│   │   │   └── __pycache__
-│   │   │       ├── __init__.cpython-36.pyc
-│   │   │       └── model.cpython-36.pyc
 │   │   ├── base.py
 │   │   ├── beta_vae
 │   │   │   ├── __init__.py
@@ -69,9 +66,6 @@ Features Extraction using Autoencoders and Contrastive Learning for Reinforcemen
 │   │   │   ├── __init__.py
 │   │   │   └── model.py
 │   │   ├── networks.py
-│   │   ├── __pycache__
-│   │   │   ├── base.cpython-36.pyc
-│   │   │   └── __init__.cpython-36.pyc
 │   │   ├── vanilla_vae
 │   │   │   ├── __init__.py
 │   │   │   └── model.py
@@ -83,16 +77,9 @@ Features Extraction using Autoencoders and Contrastive Learning for Reinforcemen
 │   │       ├── __init__.py
 │   │       └── model.py
 │   ├── __init__.py
-│   ├── __pycache__
-│   │   ├── __init__.cpython-36.pyc
-│   │   ├── test_modules.cpython-36.pyc
-│   │   └── utils.cpython-36.pyc
 │   ├── reinforcement_learning
 │   │   ├── base
 │   │   │   ├── __init__.py
-│   │   │   ├── __pycache__
-│   │   │   │   ├── __init__.cpython-36.pyc
-│   │   │   │   └── rl_agent.cpython-36.pyc
 │   │   │   └── rl_agent.py
 │   │   ├── client_secrets.json
 │   │   ├── credentials.json
@@ -101,20 +88,11 @@ Features Extraction using Autoencoders and Contrastive Learning for Reinforcemen
 │   │   │   ├── ddpg_nn_models.py
 │   │   │   ├── __init__.py
 │   │   │   ├── ou_noise.py
-│   │   │   ├── __pycache__
-│   │   │   │   ├── ddpg_agent.cpython-36.pyc
-│   │   │   │   ├── ddpg_nn_models.cpython-36.pyc
-│   │   │   │   ├── __init__.cpython-36.pyc
-│   │   │   │   └── ou_noise.cpython-36.pyc
 │   │   │   └── test_ddpg.py
 │   │   ├── ddqn
 │   │   │   ├── ddqn_agent.py
 │   │   │   ├── ddqn_nn_models.py
 │   │   │   ├── __init__.py
-│   │   │   ├── __pycache__
-│   │   │   │   ├── ddqn_agent.cpython-36.pyc
-│   │   │   │   ├── ddqn_nn_models.cpython-36.pyc
-│   │   │   │   └── __init__.cpython-36.pyc
 │   │   │   ├── README.md
 │   │   │   └── test_ddqn.py
 │   │   ├── env
@@ -126,7 +104,6 @@ Features Extraction using Autoencoders and Contrastive Learning for Reinforcemen
 │   │   │   │   ├── car_racing_advanced
 │   │   │   │   ├── car_racing.py
 │   │   │   │   ├── __init__.py
-│   │   │   │   └── __pycache__
 │   │   │   ├── __init__.py
 │   │   │   ├── launch_scripts
 │   │   │   │   ├── __init__.py
@@ -134,8 +111,6 @@ Features Extraction using Autoencoders and Contrastive Learning for Reinforcemen
 │   │   │   │   ├── test_launch_donkeycar.py
 │   │   │   │   ├── test_launch_duckietown.py
 │   │   │   │   └── unitylog.txt
-│   │   │   ├── __pycache__
-│   │   │   │   └── __init__.cpython-36.pyc
 │   │   │   ├── README.md
 │   │   │   ├── test_donkey.py
 │   │   │   ├── third_party_environments
@@ -146,16 +121,9 @@ Features Extraction using Autoencoders and Contrastive Learning for Reinforcemen
 │   │   │   └── wrappers
 │   │   │       ├── donkey_wrapper.py
 │   │   │       ├── __init__.py
-│   │   │       └── __pycache__
 │   │   ├── __init__.py
-│   │   ├── __pycache__
-│   │   │   └── __init__.cpython-36.pyc
 │   │   ├── sac
 │   │   │   ├── __init__.py
-│   │   │   ├── __pycache__
-│   │   │   │   ├── __init__.cpython-36.pyc
-│   │   │   │   ├── sac_agent.cpython-36.pyc
-│   │   │   │   └── sac_nn_models.cpython-36.pyc
 │   │   │   ├── sac_agent.py
 │   │   │   ├── sac_nn_models.py
 │   │   │   └── test_sac.py
@@ -166,14 +134,9 @@ Features Extraction using Autoencoders and Contrastive Learning for Reinforcemen
 │   │   │   │   ├── __init__.py
 │   │   │   │   ├── neptune_progress_reporter.py
 │   │   │   │   ├── progress_reporter.py
-│   │   │   │   └── __pycache__
-│   │   │   ├── __pycache__
-│   │   │   │   ├── __init__.cpython-36.pyc
-│   │   │   │   └── rl_train_scenario.cpython-36.pyc
 │   │   │   ├── rl_train_scenario.py
 │   │   │   └── teleop
 │   │   │       ├── __init__.py
-│   │   │       ├── __pycache__
 │   │   │       └── teleop.py
 │   │   ├── settings.yaml
 │   │   ├── unitylog.txt
@@ -181,11 +144,6 @@ Features Extraction using Autoencoders and Contrastive Learning for Reinforcemen
 │   │       ├── __init__.py
 │   │       ├── nn_layers.py
 │   │       ├── nn_utils.py
-│   │       ├── __pycache__
-│   │       │   ├── __init__.cpython-36.pyc
-│   │       │   ├── nn_layers.cpython-36.pyc
-│   │       │   ├── nn_utils.cpython-36.pyc
-│   │       │   └── replay_buffer.cpython-36.pyc
 │   │       └── replay_buffer.py
 │   ├── test_modules.py
 │   ├── train_agent.py
