@@ -3,13 +3,13 @@ import torch
 import torch.nn as nn
 from fastprogress import progress_bar, master_bar
 
-from src.args import args
 from src.features_extraction.base import Encoder, Decoder, LossFunction, View
 from src.test_modules import TestModelMethods
-from src.utils import mnist_NxN_loader, reconstruction_loss, get_device, save_to_file, LOG_PATH, FILE_NAME, \
-    FILE_EXCITON, save_model, setup_experiment, get_fixed_hyper_param
+from src.utils import reconstruction_loss, get_device, save_to_file, LOG_PATH, FILE_NAME, \
+    FILE_EXCITON, save_model, setup_experiment
 
 test = TestModelMethods()
+
 
 # Encoder
 class AAEEncoder(Encoder, nn.Module):
@@ -234,16 +234,16 @@ def run_epoch(model, discriminator, iterator, encoder_optimizer, decoder_optimiz
             # Evaluation mode so dropout is off
             model.encoder.eval()
             # Generating samples from a Gaussian distribution
-            z_fake = (torch.randn_like(z) * 5).to(device)  # Sample from N(0,5)
+            z_real = (torch.randn_like(z) * 5).to(device)  # Sample from N(0,5)
             # Latent code (compression of the image)
-            z_real = model.encoder(X)
+            z_fake = model.encoder(X)
 
             # Output of the Discriminator for gaussian and compressed z_dim dimensional vector
-            discriminator_fake, discriminator_real = discriminator(z_fake), discriminator(z_real)
+            discriminator_real, discriminator_fake = discriminator(z_real), discriminator(z_fake)
 
             # Loss of the discriminator from the template distribution
             discriminator_loss = -torch.mean(
-                torch.log(discriminator_fake + 1e-8) + torch.log(1 - discriminator_real + 1e-8))
+                torch.log(discriminator_real + 1e-8) + torch.log(1 - discriminator_fake + 1e-8))
 
             if is_train:
                 # Optimisation of the Discriminator
@@ -255,9 +255,9 @@ def run_epoch(model, discriminator, iterator, encoder_optimizer, decoder_optimiz
                 # Updating Generator/Encoder
                 model.encoder.train()
 
-            z_real = model.encoder(X)
-            discriminator_real = discriminator(z_real)
-            generator_loss = -torch.mean(torch.log(discriminator_real + 1e-8))
+            z_fake = model.encoder(X)
+            discriminator_fake = discriminator(z_fake)
+            generator_loss = -torch.mean(torch.log(discriminator_fake + 1e-8))
 
             if is_train:
                 encoder_optimizer.zero_grad()

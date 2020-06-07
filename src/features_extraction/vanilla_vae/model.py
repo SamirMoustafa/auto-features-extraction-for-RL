@@ -12,7 +12,7 @@ test = TestModelMethods()
 
 # Source: https://github.com/AntixK/PyTorch-VAE/blob/master/models/vanilla_vae.py
 class VanillaVAEEncoder(Encoder, nn.Module):
-    def __init__(self, z_dim=10, nc=1):
+    def __init__(self, z_dim=10, nc=3):
         super(VanillaVAEEncoder, self).__init__()
 
         self.encoder = nn.Sequential(
@@ -37,7 +37,7 @@ class VanillaVAEEncoder(Encoder, nn.Module):
 
 
 class VanillaVAEDecoder(Decoder, nn.Module):
-    def __init__(self, z_dim=10, nc=1, target_size=(128, 128)):
+    def __init__(self, z_dim=10, nc=3, target_size=(128, 128)):
         super(VanillaVAEDecoder, self).__init__()
         self.target_size = target_size
 

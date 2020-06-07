@@ -19,7 +19,7 @@ from torchvision import transforms, datasets
 from src.args import args
 
 # GPUs id to use them
-GPU_ids = [1]
+GPU_ids = [0]
 GPU_ids_str = ','.join([str(i) for i in GPU_ids])
 
 MODELS_PATH = './saved_model/'
@@ -64,6 +64,7 @@ def write_results_csv(file_name, headers_name, row_data, operation='a'):
 
 
 torch2numpy = lambda x: x.cpu().detach().numpy()
+numpy2torch = lambda x: x.to(get_device())
 
 
 def mnist_NxN_loader(root=args['hyper_parameters']['dataset'],
