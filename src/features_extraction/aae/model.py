@@ -82,10 +82,6 @@ class AdversarialAE(nn.Module):
 
 
 class AAELoss(LossFunction):
-    def __init__(self):
-        super().__init__()
-        self.loss = nn.MSELoss()
-
     def __call__(self, x, x_recon):
         return reconstruction_loss(x_recon, x)
 
