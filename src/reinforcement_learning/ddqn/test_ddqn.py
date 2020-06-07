@@ -29,7 +29,7 @@ def check_early_stop(reward, totalreward, fie, neg_reward_counter):
 def render_to_img(env):
     img = env.render(mode='rgb_array')
     img = np.ascontiguousarray(img, dtype=np.float32) / 255
-    img = img[:400, 40:440, :]
+    img = img[:400, :600, :]
     return resize(img, (128, 128)).transpose((2, 0, 1))
 
 
@@ -108,8 +108,6 @@ def main():
 
     plt.imshow(np.transpose(state, (1, 2, 0)))
     plt.show()
-
-    counter = 0
 
     print("Exploration mode started")
     while shared_dict["exploration_mode"]:
