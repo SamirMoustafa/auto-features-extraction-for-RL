@@ -12,6 +12,10 @@ from src.reinforcement_learning.scenario.progress.console_progress_reporter impo
 # from features_extraction.CLR.checkCLRonRL import CustomSimCLR50, CustomSimCLR18
 from src.features_extraction.vanilla_vae.model import VanillaVAE
 from src.features_extraction.beta_vae.model import BetaVAE
+from src.features_extraction.wasserstein_ae.model import WassersteinAE
+from src.features_extraction.aae.model import AdversarialAE
+
+from framework.CustomModels import CustomSimCLR18
 
 from src.args import args
 from src.utils import get_fixed_hyper_param
@@ -47,12 +51,21 @@ def main():
 
     # vae = VanillaVAE(z_dim, num_of_channels, input_size)
     # vae.load_state_dict(torch.load("../saved_model/VanillaVAE.best.pth"))
-    vae = BetaVAE(z_dim, num_of_channels, input_size).cpu()
-    vae.load_state_dict(torch.load("../saved_model/BetaVAE.best.pth", map_location=lambda storage, loc: storage))
-    vae = vae.cpu()
-    vae.eval()
-    encode_fn = lambda img: rescale_state(vae.bottleneck.forward(vae.encoder.forward(torch.FloatTensor(img).unsqueeze(dim=0)))[0].squeeze().numpy(),
-                                          minimum=-1e+17, maximum=1e+17)
+    # vae = BetaVAE(z_dim, num_of_channels, input_size).cpu()
+    # vae.load_state_dict(torch.load("../saved_model/BetaVAE.best.pth", map_location=lambda storage, loc: storage))
+    # vae = WassersteinAE(z_dim, num_of_channels, input_size).cpu()
+    # vae.load_state_dict(torch.load("../saved_model/WassersteinAE.best.pth", map_location=lambda storage, loc: storage))
+    # vae = AdversarialAE(z_dim, num_of_channels, input_size).cpu()
+    # vae.load_state_dict(torch.load("../saved_model/AdversarialAE.best.pth", map_location=lambda storage, loc: storage))
+    # vae = vae.cpu()
+    # vae.eval()
+    # encode_fn = lambda img: rescale_state(vae.encoder.forward(torch.FloatTensor(img).unsqueeze(dim=0)).squeeze().numpy(),
+    #                                       )minimum = -400000, maximum = 300000
+    model = CustomSimCLR18(64, 256, pretrained=True).cpu()
+    model.load_state_dict(torch.load("../saved_model/SimCLR18.best.pth", map_location=lambda storage, loc: storage)["state_dict"])
+    model = model.cpu()
+    model.eval()
+    encode_fn = lambda img: model.forward(torch.FloatTensor(img).unsqueeze(dim=0))[0].squeeze().numpy()
 
     env = DonkeyCarEnvironment(os.path.abspath("./reinforcement_learning/env/third_party_environments/"),
                                encoder_fn=encode_fn)

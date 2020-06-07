@@ -14,7 +14,7 @@ class RLTrainScenario:
         self.action_queue_ = Queue()
 
     def run(self):
-        shared_dict ={"action": [0, 0], "manual_mode": False, "exploration_mode": True}
+        shared_dict ={"action": [0, 0], "manual_mode": False, "exploration_mode": True, "need_reset": False}
 
         teleop = Teleoperator(self.env_, shared_dict, self.action_queue_)
         teleop.start()
@@ -43,13 +43,17 @@ class RLTrainScenario:
             episode_reward = 0
 
             for step in range(self.max_steps_):
+                if shared_dict["need_reset"] is True:
+                    shared_dict["need_reset"] = False
+                    break
+
                 if not shared_dict["manual_mode"]:
                     #print("Actioning")
                     action = self.agent_.get_action(state)
                 else:
                     action = shared_dict["action"]
-                print("State: " + str(np.max(state)) + ", " + str(np.min(state)))
-                print("Action: " + str(action))
+                #print("State: " + str(np.max(state)) + ", " + str(np.min(state)))
+                #print("Action: " + str(action))
 
                 next_state, reward, done = self.env_.step(action)
                 self.agent_.replay_buffer_.push(state, action, reward, next_state, done)

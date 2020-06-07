@@ -39,6 +39,8 @@ class Teleoperator:
                             print("Manual mode:" + str(self.shared_dict_["manual_mode"]))
                         elif event.key == pygame.K_e:
                             self.shared_dict_["exploration_mode"] = False
+                        elif event.key == pygame.K_r:
+                            self.shared_dict_["need_reset"] = True
 
                 self.process_key(pygame_key)
 
