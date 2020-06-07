@@ -8,12 +8,14 @@ import torch
 import torch.nn as nn
 import torchvision
 
+
 # in our case we have 2 kinds of models: Resnet50 to finetune on collected dataset and Resnet18 to train from scratch on collected dataset
-def GetModel(model_name, pretrained): # either 'Resnet50' or 'Resnet18' 
+def GetModel(model_name, pretrained):  # either 'Resnet50' or 'Resnet18'
     if model_name == 'Resnet50':
-        return ResNet(Bottleneck, [3, 4, 6, 3], width_mult = 1)
+        return ResNet(Bottleneck, [3, 4, 6, 3], width_mult=1)
     else:
-        return torchvision.models.resnet18(pretrained = pretrained)
+        return torchvision.models.resnet18(pretrained=pretrained)
+
 
 # here is the version of this script: https://github.com/tonylins/simclr-converter/blob/master/resnet_wider.py
 def conv3x3(in_planes, out_planes, stride=1, groups=1, dilation=1):
@@ -67,6 +69,7 @@ class BasicBlock(nn.Module):
 
         return out
 
+
 class Bottleneck(nn.Module):
     expansion = 4
     __constants__ = ['downsample']
@@ -110,7 +113,7 @@ class Bottleneck(nn.Module):
 
         return out
 
-    
+
 class ResNet(nn.Module):
 
     def __init__(self, block, layers, num_classes=1000, zero_init_residual=False,
@@ -208,4 +211,3 @@ class ResNet(nn.Module):
 
     def forward(self, x):
         return self._forward_impl(x)
-
