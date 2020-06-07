@@ -37,6 +37,9 @@ class DDQNAgent(RLAgent):
         self.replay_buffer_ = ReplayBuffer(buffer_size)
         self.mse_criterion_ = nn.MSELoss()
 
+        print('Action dim: ', action_dim)
+        print('State dim: ', state_dim)
+
     def get_action(self, state, eps=0.20):
         state = torch.FloatTensor(state).unsqueeze(0).to(self.device_)
         action = self.model_.forward(state)

@@ -58,5 +58,5 @@ def main(agent_type):
 
 
 if __name__ == "__main__":
-    agent_type = 'DDQNAgent'
+    agent_type = 'SACAgent'
     main(agent_type)

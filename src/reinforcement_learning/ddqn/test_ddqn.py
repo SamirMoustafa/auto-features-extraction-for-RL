@@ -4,6 +4,7 @@ from skimage.transform import resize
 from reinforcement_learning.ddqn.ddqn_agent import DDQNAgent
 from reinforcement_learning.scenario.progress.neptune_progress_reporter import NeptuneProgressReporter
 import matplotlib.pyplot as plt
+import src.reinforcement_learning.env
 
 
 def render_to_img(env):
@@ -48,7 +49,8 @@ def run_training(env, agent, max_episodes, max_steps, batch_size, progress_repor
 
 
 def main():
-    env = gym.make("MountainCarContinuous-v0")
+    # env = gym.make("MountainCarContinuous-v0")
+    env = gym.make('CarRacingCustom-v0')
     agent = DDQNAgent((128, 128),
                       env.action_space.shape[0],
                       [env.action_space.low,
