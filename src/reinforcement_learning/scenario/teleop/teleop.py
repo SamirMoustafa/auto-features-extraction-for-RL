@@ -34,9 +34,13 @@ class Teleoperator:
                         end = True
                         if event.key == pygame.K_m:
                             self.shared_dict_["manual_mode"] = not self.shared_dict_["manual_mode"]
+                            self.env_.step(np.array([0.0, 0.0]))
+                            self.reset()
                             print("Manual mode:" + str(self.shared_dict_["manual_mode"]))
                         elif event.key == pygame.K_e:
                             self.shared_dict_["exploration_mode"] = False
+                        elif event.key == pygame.K_r:
+                            self.shared_dict_["need_reset"] = True
 
                 self.process_key(pygame_key)
 
@@ -72,48 +76,16 @@ class Teleoperator:
             #                                                                self.control_steering_)
             # self.action_queue_.put([self.control_steering_, self.control_throttle_])
             # self.shared_dict_["action"] = [self.control_steering_, self.control_throttle_]
-            action = np.clip([self.theta_, self.x_], self.action_space_.low, self.action_space_.high)
+            action = np.clip([self.theta_, self.x_], [self.action_space_.low[0], 0.0],
+                             [self.action_space_.high[0], 3.0])
             self.shared_dict_["action"] = action
 
-    def control(self, x, theta, control_throttle, control_steering):
-        """
-        Smooth control.
-        :param x: (float)
-        :param theta: (float)
-        :param control_throttle: (float)
-        :param control_steering: (float)
-        :return: (float, float)
-        """
-
-        MAX_STEERING = 1
-        MIN_STEERING = - MAX_STEERING
-
-        # Simulation config
-        MIN_THROTTLE = 0.4
-        # max_throttle: 0.6 for level 0 and 0.5 for level 1
-        MAX_THROTTLE = 0.6
-
-        MAX_TURN = 1
-        # Smoothing constants
-        STEP_THROTTLE = 0.3
-        STEP_TURN = 0.4
-
-        target_throttle = x
-        target_steering = MAX_TURN * theta
-        if target_throttle > control_throttle:
-            control_throttle = min(target_throttle, control_throttle + STEP_THROTTLE)
-        elif target_throttle < control_throttle:
-            control_throttle = max(target_throttle, control_throttle - STEP_THROTTLE)
-        else:
-            control_throttle = target_throttle
-
-        if target_steering > control_steering:
-            control_steering = min(target_steering, control_steering + STEP_TURN)
-        elif target_steering < control_steering:
-            control_steering = max(target_steering, control_steering - STEP_TURN)
-        else:
-            control_steering = target_steering
-        return control_throttle, control_steering
+    def reset(self):
+        self.shared_dict_["action"] = np.array([0.0, 0.0])
+        self.x_ = 0.0
+        self.theta_ = 0.0
+        self.control_throttle_ = 0.0
+        self.control_steering_ = 0.0
 
     def start(self):
         self.process_ = threading.Thread(target=self.main_loop)

@@ -103,16 +103,19 @@ class SACAgent(RLAgent):
             return self.rescale_action_(action)
 
     def train_step(self, batch_size):
+        if len(self.replay_buffer_) < batch_size:
+            return
+
         self.set_eval_mode(False)
 
         states, actions, rewards, next_states, dones = self.replay_buffer_.sample_random_batch(batch_size)
-        plt.imshow(states[0])
         states = torch.FloatTensor(states).to(self.device_)
         actions = torch.FloatTensor(actions).to(self.device_)
         rewards = torch.FloatTensor(rewards).to(self.device_)
         next_states = torch.FloatTensor(next_states).to(self.device_)
         dones = torch.FloatTensor(dones).to(self.device_)
         dones = dones.view(dones.size(0), -1)
+        rewards = rewards.view(rewards.size(0), -1)
 
         next_actions, next_log_pi = self.policy_net_.sample(next_states)
         next_q1 = self.target_q_net_1_(next_states, next_actions)
@@ -135,6 +138,9 @@ class SACAgent(RLAgent):
         q2_loss.backward()
         self.q_2_optimizer_.step()
 
+        print("Q1 Loss: ", q1_loss.item())
+        print("Q2 Loss: ", q2_loss.item())
+
         # delayed update for policy network and target q networks
         new_actions, log_pi = self.policy_net_.sample(states)
         if self.update_step_ % self.delay_step_ == 0:
@@ -147,6 +153,7 @@ class SACAgent(RLAgent):
             self.policy_optimizer_.zero_grad()
             policy_loss.backward()
             self.policy_optimizer_.step()
+            print("Policy loss: ", policy_loss.item())
 
             # target networks
             for target_param, param in zip(self.target_q_net_1_.parameters(), self.q_net_1_.parameters()):
