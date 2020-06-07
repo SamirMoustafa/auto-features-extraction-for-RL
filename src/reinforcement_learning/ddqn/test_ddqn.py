@@ -111,9 +111,8 @@ def main():
 
     counter = 0
 
-    # Stage 1: Exploration
-    while counter < 5:
-    # while shared_dict["exploration_mode"]:
+    print("Exploration mode started")
+    while shared_dict["exploration_mode"]:
         action = env.action_space.sample()
         _, reward, done, info = env.step(action)
         next_state = render_to_img(env)
@@ -123,9 +122,8 @@ def main():
         if done:
             state = env.reset()
             shared_dict["exploration_mode"] = False
-            counter += 1
 
-    print("Exploration finished, start training")
+    print("Exploration finished, starting training")
     run_training(env, agent, 5000, 500, 20, progress_reporter)
 
 
